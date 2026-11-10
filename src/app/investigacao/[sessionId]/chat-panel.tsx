@@ -9,7 +9,7 @@ import { markChatRead } from "@/server/actions/collab";
 import type { MessageView } from "@/server/game/collab";
 import { useCollab } from "./use-collab";
 
-const TIME = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+import { formatTime } from "@/lib/format";
 
 export function ChatPanel({
   sessionId,
@@ -75,7 +75,7 @@ export function ChatPanel({
               ) : null}
             </div>
             <time dateTime={m.at} className="font-mono text-[10px] text-paper-500">
-              {m.mine ? "Você" : partnerName} · {TIME.format(new Date(m.at))}
+              {m.mine ? "Você" : partnerName} · {formatTime(m.at)}
             </time>
           </li>
         ))}

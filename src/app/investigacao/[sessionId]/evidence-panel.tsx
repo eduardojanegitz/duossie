@@ -7,6 +7,7 @@ import { EvidenceDocument } from "@/components/case/evidence-document";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
+import { play } from "@/lib/audio/sfx";
 import { useCollab } from "./use-collab";
 import { useGameAction } from "./use-game-action";
 
@@ -45,6 +46,7 @@ export function EvidencePanel({
   const ordered = [...view.evidence].sort((a, b) => Number(a.seen) - Number(b.seen));
 
   async function openEvidence(ev: EvidenceView) {
+    play("open");
     setOpenId(ev.id);
     setError(null);
     if (!ev.seen) await dispatch({ type: "view_evidence", evidenceId: ev.id });

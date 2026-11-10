@@ -106,7 +106,7 @@ export function OpeningSequence() {
               Duas perspectivas. Uma única verdade.
             </motion.p>
           </div>
-          <span className="absolute bottom-[max(1.5rem,var(--safe-bottom))] font-mono text-[10px] uppercase tracking-[0.3em] text-ink-500">
+          <span className="absolute bottom-[max(1.5rem,var(--safe-bottom))] font-mono text-[10px] uppercase tracking-[0.3em] text-paper-500">
             Toque para pular
           </span>
         </motion.div>

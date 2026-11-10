@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { BookOpen, FileText, KeyRound, MessageSquare, Network, ScrollText } from "lucide-react";
+import { BookOpen, FileText, KeyRound, MessageSquare, Network, ScrollText, Volume2, VolumeX } from "lucide-react";
+import { play, setSoundEnabled, useSoundEnabled } from "@/lib/audio/sfx";
 import type { PlayerView } from "@/engine";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
@@ -54,6 +55,14 @@ export function InvestigationClient({
   const router = useRouter();
   const [tab, setTab] = useState<Tab>(() => (view.evidence.some((e) => e.seen) ? "evidence" : "journal"));
   const [chatOpen, setChatOpen] = useState(false);
+  const soundOn = useSoundEnabled();
+
+  // Som discreto quando chega mensagem nova do parceiro.
+  const lastUnread = useRef(chat.unread);
+  useEffect(() => {
+    if (chat.unread > lastUnread.current) play("message");
+    lastUnread.current = chat.unread;
+  }, [chat.unread]);
 
   // Sincronização: o servidor avisa que a sessão mudou → buscamos a visão de novo.
   const refresh = useCallback(() => router.refresh(), [router]);
@@ -113,6 +122,15 @@ export function InvestigationClient({
               <p className="truncate font-mono text-[11px] uppercase tracking-[0.2em] text-paper-500" data-testid="my-role">
                 Você · {view.roleInfo.name}
               </p>
+              <button
+                type="button"
+                onClick={() => setSoundEnabled(!soundOn)}
+                aria-pressed={soundOn}
+                aria-label={soundOn ? "Desligar efeitos sonoros" : "Ligar efeitos sonoros"}
+                className="grid size-12 place-items-center text-paper-500 hover:text-paper-100"
+              >
+                {soundOn ? <Volume2 aria-hidden className="size-5" /> : <VolumeX aria-hidden className="size-5" />}
+              </button>
               <button
                 type="button"
                 onClick={() => setChatOpen(true)}
@@ -236,6 +254,7 @@ function ChapterTransition({ chapter }: { chapter: PlayerView["chapter"] }) {
   useEffect(() => {
     if (previous.current === chapter.id) return;
     previous.current = chapter.id;
+    play("chapter");
     const frame = requestAnimationFrame(() => setShown(chapter));
     return () => cancelAnimationFrame(frame);
   }, [chapter]);
@@ -294,6 +313,7 @@ function DiscoveryToast({ count, solved }: { count: number; solved: number }) {
     if (solved > before.solved) text = "Enigma resolvido";
     else if (count > before.count) text = count - before.count === 1 ? "Nova evidência no arquivo" : `${count - before.count} novas evidências no arquivo`;
     if (!text) return;
+    play(solved > before.solved ? "solve" : "discover");
     const show = requestAnimationFrame(() => setMessage(text));
     const hide = window.setTimeout(() => setMessage(null), 3200);
     return () => {

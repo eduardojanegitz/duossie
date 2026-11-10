@@ -165,6 +165,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"duo_achievements": {
+                  Row: {
+                    "achievement_id": string,"duo_id": string,"session_id": string | null,"unlocked_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "achievement_id": string,"duo_id": string,"session_id"?: string | null,"unlocked_at"?: string
+                  }
+                  Update: {
+                    "achievement_id"?: string,"duo_id"?: string,"session_id"?: string | null,"unlocked_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "duo_achievements_duo_id_fkey"
+      columns: ["duo_id"]
+isOneToOne: false
+      referencedRelation: "duos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duo_achievements_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"duo_invites": {
                   Row: {
                     "code_hash": string,"created_at": string,"created_by": string,"duo_id": string,"expires_at": string,"id": string,"revoked_at": string | null,"used_at": string | null,"used_by": string | null

@@ -14,6 +14,7 @@ import {
   type Role,
   type SessionState,
 } from "@/engine";
+import { evaluateAchievements } from "@/lib/achievements";
 import type { Viewer } from "@/server/auth/viewer";
 import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import type { Json } from "@/server/supabase/database.types";
@@ -223,6 +224,7 @@ export async function performAction(
         .single();
       return { outcome: (previous?.outcome as ActionOutcome | undefined) ?? { kind: "none" }, duplicate: true };
     }
+    if (result.state.status === "completed") await grantAchievements(ctx, result.state);
     return { outcome: result.outcome, duplicate: false };
   }
   throw new GameError("conflict");
@@ -244,4 +246,64 @@ export async function getCaseRoles(caseId: string) {
     A: { name: def.roles.A.name, tagline: def.roles.A.tagline, briefing: def.roles.A.briefing },
     B: { name: def.roles.B.name, tagline: def.roles.B.tagline, briefing: def.roles.B.briefing },
   };
+}
+
+/** Concede (uma vez por dupla) as conquistas obtidas ao concluir o caso. Nunca falha a ação. */
+async function grantAchievements(ctx: PlayerContext, state: SessionState) {
+  try {
+    const db = createSupabaseAdminClient();
+    const { count } = await db.from("board_links").select("id", { count: "exact", head: true }).eq("session_id", ctx.session.id);
+    const earned = evaluateAchievements(ctx.def, state, { boardLinks: count ?? 0 });
+    if (earned.length === 0) return;
+    await db
+      .from("duo_achievements")
+      .upsert(
+        earned.map((id) => ({ duo_id: ctx.session.duo_id, achievement_id: id, session_id: ctx.session.id })),
+        { onConflict: "duo_id,achievement_id", ignoreDuplicates: true },
+      );
+  } catch (error) {
+    console.error("[grantAchievements]", error instanceof Error ? error.message : error);
+  }
+}
+
+export type HistoryEntry = {
+  sessionId: string;
+  caseId: string;
+  startedAt: string;
+  completedAt: string;
+  minutes: number;
+  hints: number;
+  verdict: { id: string; title: string; score: number } | null;
+};
+
+/** Investigações concluídas da dupla, com o melhor veredito obtido. */
+export async function getHistory(viewer: Viewer): Promise<HistoryEntry[]> {
+  if (!viewer.duo) return [];
+  const db = createSupabaseAdminClient();
+  const { data } = await db
+    .from("case_sessions")
+    .select("id, case_id, case_version_id, started_at, completed_at, state")
+    .eq("duo_id", viewer.duo.id)
+    .not("completed_at", "is", null)
+    .order("completed_at", { ascending: false });
+  const entries: HistoryEntry[] = [];
+  for (const row of data ?? []) {
+    const def = await loadDefinition(row.case_version_id);
+    const state = row.state as unknown as SessionState;
+    const best = (state.theory?.verdicts ?? []).reduce<SessionState["theory"]["verdicts"][number] | null>(
+      (b, v) => (!b || v.score > b.score ? v : b),
+      null,
+    );
+    const verdictDef = best ? def.theory.verdicts.find((v) => v.id === best.verdictId) : undefined;
+    entries.push({
+      sessionId: row.id,
+      caseId: row.case_id,
+      startedAt: row.started_at,
+      completedAt: row.completed_at!,
+      minutes: Math.max(1, Math.round((new Date(row.completed_at!).getTime() - new Date(row.started_at).getTime()) / 60000)),
+      hints: Object.values(state.hints ?? {}).reduce((n, h) => n + (h.A ?? 0) + (h.B ?? 0), 0),
+      verdict: best && verdictDef ? { id: best.verdictId, title: verdictDef.title, score: best.score } : null,
+    });
+  }
+  return entries;
 }

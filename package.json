@@ -20,7 +20,8 @@
     "check": "npm run typecheck && npm run lint && npm test && npm run content:check",
     "content:import": "tsx scripts/content-import.ts",
     "content:check": "tsx scripts/content-import.ts --check",
-    "dev:seed-duo": "tsx scripts/dev-seed-duo.ts"
+    "dev:seed-duo": "tsx scripts/dev-seed-duo.ts",
+    "playtest:report": "tsx scripts/playtest-report.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

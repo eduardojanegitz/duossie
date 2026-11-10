@@ -8,6 +8,7 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 - Decisões aprovadas: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Plano por fases e critérios de verificação: [docs/PLAN.md](docs/PLAN.md)
 - Como criar, validar e versionar casos: [docs/CONTENT.md](docs/CONTENT.md)
+- Playtest: [docs/PLAYTEST.md](docs/PLAYTEST.md) · Deploy e checklist do MVP: [docs/DEPLOY.md](docs/DEPLOY.md)
 
 > ⚠️ **Spoilers:** não abra `content/cases/` nem `tests/e2e/case-001.spec.ts` /
 > `tests/integration/investigation.test.ts` (usam as respostas) se você pretende jogar (veja D02).
@@ -20,8 +21,8 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 | 2 — Interface principal (central, catálogo, dossiês, presença) | ✅ implementada e testada |
 | 3 — Motor de investigação + Caso 001 jogável | ✅ implementada e testada (texto; sem áudio/arte final) |
 | 4 — Cooperação (quadro, chat, decisões, novos enigmas) | ✅ implementada e testada |
-| 5 — Caso 001 completo | pendente |
-| 6 — Polimento e deploy | pendente |
+| 5 — Caso 001 completo | ✅ conteúdo e kit de playtest prontos · ⏳ falta playtest com dupla real ([docs/PLAYTEST.md](docs/PLAYTEST.md)) |
+| 6 — Polimento e deploy | ✅ áudio, conquistas, histórico, PWA, segurança, acessibilidade · ⏳ deploy depende de contas ([docs/DEPLOY.md](docs/DEPLOY.md)) |
 
 ## Stack
 
@@ -74,6 +75,7 @@ docs/             decisões e plano
 | `session_actions`, `session_events` | **nenhum** | idempotência (`action_id`) e log append-only |
 | `board_items`, `board_links` | **nenhum** (via servidor) | quadro: evidências fixadas, anotações, grupos, status, conexões |
 | `session_messages`, `session_reads` | **nenhum** (via servidor) | chat da investigação, pedidos de ajuda, não lidas |
+| `duo_achievements` | dupla lê | conquistas concedidas pelo servidor ao concluir um caso |
 
 Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. Todas validam
 `auth.uid()` e rodam como `SECURITY DEFINER` com `search_path` vazio. Só para o servidor
@@ -173,7 +175,20 @@ SCREENS_DIR=./capturas npx playwright test tests/e2e/screens.spec.ts
 
 Os testes de integração e E2E apagam e recriam os usuários `*@duossie.test`.
 
+## Segurança
+
+- RLS em todas as tabelas; o cliente só executa `create_duo`, `create_duo_invite`, `join_duo` e só
+  altera `profiles.codename` (auditado com consultas ao catálogo do Postgres).
+- Definições, estado, quadro e chat só pelo servidor; projeção por papel; itens tarjados.
+- Rate limit: convites, tentativas de enigma/dicas (30/5 min), chat (60/min); OTP limitado pelo Supabase Auth.
+- Cabeçalhos: CSP (scripts inline exigidos pelo streaming do Next), `X-Frame-Options: DENY`,
+  `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS; `poweredByHeader` desligado.
+- Server Actions validam entrada com Zod e conferem dupla/papel; erros técnicos só no log do servidor.
+- Bundle do cliente verificado sem a chave secreta nem respostas de enigmas.
+
 ## Deploy (pendente: dependências externas)
+
+Passo a passo completo em [docs/DEPLOY.md](docs/DEPLOY.md). Resumo:
 
 Ainda não existem projeto Supabase Cloud nem projeto Vercel. Quando existirem:
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { formatDateTime } from "@/lib/format";
 import { createDuo, createInvite, joinDuo } from "@/server/actions/duo";
 
 export function CreateDuoForm() {
@@ -107,7 +108,7 @@ export function InvitePanel() {
             {invite.code}
           </p>
           <p className="text-sm text-paper-500">
-            Válido até {new Date(invite.expiresAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}. Uso único.
+            Válido até {formatDateTime(invite.expiresAt)}. Uso único.
           </p>
           <Button variant="outline" onClick={copy}>
             {copied ? <Check aria-hidden className="size-4" /> : <Copy aria-hidden className="size-4" />}

@@ -15,7 +15,7 @@ export default function EntrarPage() {
         </p>
       </header>
       <LoginForm />
-      <p className="font-mono text-xs uppercase tracking-[0.25em] text-ink-500">Acesso restrito · investigadores autorizados</p>
+      <p className="font-mono text-xs uppercase tracking-[0.25em] text-paper-500">Acesso restrito · investigadores autorizados</p>
     </Screen>
   );
 }

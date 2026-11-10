@@ -1,7 +1,6 @@
 import type { PlayerView } from "@/engine";
 import { FileLabel } from "@/components/layout/screen";
-
-const TIME = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+import { formatTime } from "@/lib/format";
 
 /** Diário: contexto do caso, briefing do papel, capítulos e linha do tempo da dupla. */
 export function JournalPanel({ view }: { view: PlayerView }) {
@@ -53,7 +52,7 @@ export function JournalPanel({ view }: { view: PlayerView }) {
             {feed.map((f) => (
               <li key={f.seq} className="flex gap-3 text-sm">
                 <time dateTime={f.at} className="shrink-0 font-mono text-xs text-paper-500">
-                  {TIME.format(new Date(f.at))}
+                  {formatTime(f.at)}
                 </time>
                 <span className={f.kind === "solved" || f.kind === "chapter" ? "text-amber-400" : "text-paper-100"}>{f.label}</span>
               </li>

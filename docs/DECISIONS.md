@@ -36,3 +36,8 @@ Alterar uma decisão = editar esta página e citar o motivo.
 | D29 | Contradições e mecanismo | Contradição: cada papel marca as próprias afirmações; avaliação só com as duas partes (o parceiro sabe que você enviou, não o quê). Mecanismo: comandos por papel, ordem alternada; erro trava e volta ao início, avisando os dois. | Seções 9.5 e 9.6. |
 | D30 | Decisões | Individuais (só o dono vê) e conjuntas (os dois veem os votos; só resolve com escolhas iguais, sem desempate automático). Cada opção tem consequência em texto e efeitos. O Caso 001 ainda não usa decisões. | Seção 13. |
 | D31 | Estado antigo | Campos novos do motor são completados na leitura (`normalizeState`): investigações em andamento continuam funcionando. | Compatibilidade entre versões do motor. |
+| D32 | Áudio | Efeitos procedurais (Web Audio, sem arquivos), desligados por padrão, botão no topo da investigação; o contexto de áudio só nasce num gesto do usuário. Todo som tem equivalente visual. | Seção 18; restrições de autoplay no celular. |
+| D33 | Conquistas | 7 conquistas de mérito/cooperação (nenhuma por velocidade), avaliadas no servidor ao concluir o caso, uma vez por dupla. | Seção 15; "não premiar só velocidade". |
+| D34 | PWA | Instalável (manifesto, ícones, meta iOS), **sem modo offline**: estado e privacidade dependem do servidor. | D14. |
+| D35 | CSP | `script-src 'self' 'unsafe-inline'` (sem nonce) para manter o shell estático do Partial Prerender; conexões restritas ao próprio site e ao Supabase. | Equilíbrio segurança × desempenho; revisar se surgir conteúdo de terceiros. |
+| D36 | Fuso de exibição | Datas formatadas em `America/Sao_Paulo` no servidor e no cliente. | Evita erro de hidratação; público no Brasil. |

@@ -15,7 +15,8 @@ test.beforeAll(async () => {
   await deleteTestUsers();
 });
 test.afterAll(async () => {
-  await deleteTestUsers();
+  // KEEP_E2E_DATA=1 mantém a partida no banco local (ex.: para testar `npm run playtest:report`).
+  if (!process.env.KEEP_E2E_DATA) await deleteTestUsers();
 });
 
 async function openTab(page: Page, name: string) {
@@ -141,7 +142,7 @@ test("dupla joga o Caso 001 do início ao epílogo, cada um com sua perspectiva"
   for (const page of [a, b]) {
     await openTab(page, "Relatório");
     await expect(page.getByTestId("resolution")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Caso encerrado")).toBeVisible();
+    await expect(page.getByTestId("resolution").getByText("Caso encerrado")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Epílogo" })).toBeVisible();
   }
 

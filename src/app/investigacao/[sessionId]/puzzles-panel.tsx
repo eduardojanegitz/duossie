@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, CheckCircle2, LifeBuoy, Lightbulb, Lock } from "luc
 import type { DecisionView, PlayerView, PuzzleAnswer, PuzzleView } from "@/engine";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { play } from "@/lib/audio/sfx";
 import { useCollab } from "./use-collab";
 import { useGameAction, type DispatchResult } from "./use-game-action";
 
@@ -53,6 +54,7 @@ function PuzzleCard({ puzzle, sessionId, role, partnerName }: { puzzle: PuzzleVi
     const result: DispatchResult = await dispatch({ type: "attempt_puzzle", puzzleId: puzzle.id, answer });
     if (!result.ok) return setFeedback({ tone: "error", text: result.error });
     if (result.outcome.kind === "puzzle" && !result.outcome.correct) {
+      play("error");
       const partial =
         result.outcome.partial !== undefined && result.outcome.total
           ? ` ${result.outcome.partial} de ${result.outcome.total} estão certos.`
@@ -79,6 +81,7 @@ function PuzzleCard({ puzzle, sessionId, role, partnerName }: { puzzle: PuzzleVi
     const result = await dispatch({ type: "operate_mechanism", puzzleId: puzzle.id, control });
     if (!result.ok) return setFeedback({ tone: "error", text: result.error });
     if (result.outcome.kind === "mechanism" && !result.outcome.ok) {
+      play("error");
       setFeedback({ tone: "info", text: "O mecanismo travou e voltou ao início. Combinem a ordem antes de tentar de novo." });
     }
   }
@@ -205,7 +208,7 @@ function CodeInput({ puzzle, pending, onSubmit }: { puzzle: Extract<PuzzleView, 
         placeholder={puzzle.inputLabel}
         autoComplete="off"
         inputMode="text"
-        className="min-h-12 flex-1 rounded-sm border border-ink-600 bg-ink-900 px-4 font-mono text-xl tracking-[0.3em] text-paper-50 placeholder:text-sm placeholder:tracking-normal placeholder:text-ink-500 focus:border-amber-500 focus:outline-none"
+        className="min-h-12 flex-1 rounded-sm border border-ink-600 bg-ink-900 px-4 font-mono text-xl tracking-[0.3em] text-paper-50 placeholder:text-sm placeholder:tracking-normal placeholder:text-paper-500 focus:border-amber-500 focus:outline-none"
       />
       <Button type="submit" disabled={pending || !code.trim()}>
         Testar

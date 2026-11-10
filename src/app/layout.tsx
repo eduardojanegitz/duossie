@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   description: "Duas perspectivas. Uma única verdade.",
   applicationName: "Duossie",
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: "Duossie", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
