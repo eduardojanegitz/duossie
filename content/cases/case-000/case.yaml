@@ -1,0 +1,141 @@
+# Caso 000 — Treinamento. Caso didático para conhecer as mecânicas do Duossie.
+# Não tem relação com os casos da temporada (pode ser lido sem estragar nada).
+id: case-000
+version: 1
+title: Treinamento — A Sala 3
+
+roles:
+  A:
+    name: Arquivo
+    tagline: Documentos, fichas e registros
+    briefing: >-
+      No treinamento você fica na sala de arquivos da academia. Vê fichas, registros de
+      portaria e manuais. Não vê os objetos nem as câmeras — isso está com o Campo.
+  B:
+    name: Campo
+    tagline: Objetos, câmeras e relatos
+    briefing: >-
+      No treinamento você fica nos corredores da academia. Vê objetos, câmeras e relatos.
+      Não vê os documentos — isso está com o Arquivo.
+
+intro: >-
+  Bem-vindos ao treinamento do Duossie. A Sala 3 da academia amanheceu destrancada e o
+  instrutor quer saber o que aconteceu na noite anterior. Cada um de vocês vê uma parte
+  diferente das informações. Nenhum enigma se resolve sozinho: conversem o tempo todo.
+  Comecem pela aba Arquivos e abram o documento "Como funciona".
+
+chapters:
+  - id: ch.basico
+    title: Primeiro contato
+    intro: Abram os arquivos. Cada um tem uma metade do código do cadeado.
+  - id: ch.intermediario
+    title: Cruzando informações
+    intro: >-
+      Dois enigmas novos ao mesmo tempo — resolvam na ordem que quiserem. Experimentem
+      fixar evidências no Quadro e usar o chat.
+  - id: ch.avancado
+    title: Treino avançado
+    intro: >-
+      Agora, enigmas em que os dois agem: contradições (cada um marca as suas) e um
+      painel em que um precisa esperar o outro.
+  - id: ch.relatorio
+    title: Relatório do treino
+    intro: Vocês têm tudo. Um propõe o relatório, o outro revisa e confirma.
+
+events:
+  - id: evt.avancado
+    when: { all: [{ puzzleSolved: pz.crachas }, { puzzleSolved: pz.ordem }] }
+    effects:
+      - startChapter: ch.avancado
+  - id: evt.dica-quadro
+    when: { chapterReached: ch.intermediario }
+    effects:
+      - notify:
+          to: both
+          text: "Dica do treino: abra uma evidência e toque em “Fixar no quadro”. Veja como o parceiro enxerga o cartão."
+
+decisions:
+  - id: dc.assinatura
+    kind: joint
+    title: Como entregar o relatório?
+    prompt: >-
+      O instrutor pergunta como vocês querem entregar o relatório. Esta é uma decisão
+      conjunta: só vale quando os dois escolherem a mesma opção. Experimentem escolher
+      opções diferentes para ver o que acontece.
+    availableWhen: { all: [{ puzzleSolved: pz.versoes }, { puzzleSolved: pz.painel }] }
+    options:
+      - id: conjunto
+        label: Um relatório assinado pelos dois
+        outcome: O instrutor anota na ficha da dupla — “trabalham como um só”.
+        effects:
+          - startChapter: ch.relatorio
+      - id: separado
+        label: Cada um entrega o seu
+        outcome: O instrutor recebe dois relatórios e anota — “treinar mais a conversa”.
+        effects:
+          - startChapter: ch.relatorio
+
+theory:
+  availableWhen: { decisionMade: { id: dc.assinatura } }
+  intro: >-
+    Último passo do treino. Um de vocês marca as respostas e propõe; o outro revisa e confirma
+    (ou devolve para discutir). Não há tempo: o que conta é acertar juntos.
+  questions:
+    - id: q.mentiram
+      prompt: Quem mentiu sobre o próprio horário na noite anterior?
+      kind: multiple
+      options:
+        - { id: bia, label: Bia }
+        - { id: caio, label: Caio }
+        - { id: duda, label: Duda }
+        - { id: eli, label: Eli }
+      correct: [caio, duda]
+      explanation: >-
+        Caio disse que foi embora às 18h, mas a câmera o filmou no corredor às 18h30. Duda disse que
+        ficou até as 19h, mas a portaria registrou a saída dela às 18h10.
+    - id: q.ultimo
+      prompt: Quem foi a última pessoa a sair da academia?
+      kind: single
+      options:
+        - { id: bia, label: Bia }
+        - { id: caio, label: Caio }
+        - { id: duda, label: Duda }
+        - { id: eli, label: Eli }
+      correct: [eli]
+      explanation: A portaria registra a saída de Eli às 19h20 — depois de todos os outros.
+    - id: q.mecanica
+      prompt: Em qual enigma um de vocês precisou esperar o outro agir?
+      kind: single
+      options:
+        - { id: cadeado, label: O cadeado }
+        - { id: crachas, label: Os armários }
+        - { id: versoes, label: As versões }
+        - { id: painel, label: O painel da Sala 3 }
+      correct: [painel]
+      explanation: No painel, os comandos alternam entre os dois papéis — um erro trava tudo e volta ao início.
+  verdicts:
+    - id: closed
+      minScore: 85
+      title: Caso encerrado
+      text: Treinamento concluído com louvor. Vocês estão prontos para os casos de verdade.
+    - id: partial
+      minScore: 50
+      title: Parcialmente esclarecido
+      text: Quase lá. Releiam as explicações abaixo — os casos reais cobram esses detalhes.
+    - id: archived
+      minScore: 0
+      title: Arquivado
+      text: O relatório não fechou. Reabram e tentem de novo; é só treino.
+
+resolution:
+  summary: >-
+    Eli foi o último a sair (19h20) e esqueceu a Sala 3 destrancada. Caio voltou escondido às 18h30
+    para buscar um carregador e não quis admitir; Duda saiu cedo, às 18h10, e disse ter ficado até
+    as 19h para não parecer que largou o plantão. Nenhum dos dois tinha relação com a porta.
+  overlooked:
+    - O cadeado só abriu porque um tinha a ordem dos símbolos e o outro os valores.
+    - Nas versões, as afirmações de um eram desmentidas pelas evidências do outro.
+    - No painel, a ordem estava dividida entre os dois manuais.
+  epilogue: >-
+    O instrutor fecha a pasta do treino e entrega a vocês o primeiro arquivo de verdade:
+    o Caso 001. Lá, ninguém vai dizer qual mecânica usar. Boa investigação.

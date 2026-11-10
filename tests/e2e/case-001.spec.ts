@@ -68,7 +68,7 @@ test("dupla joga o Caso 001 do início ao epílogo, cada um com sua perspectiva"
   // A abre a investigação como Central (papel A).
   await a.getByRole("link", { name: "Ir para a central" }).click();
   await a.getByRole("link", { name: /^Caso 001:/ }).click();
-  await a.getByRole("radio", { name: new RegExp(def.roles.A.name) }).check();
+  await a.getByRole("radio", { name: new RegExp(`^${def.roles.A.name}`) }).check();
   await a.getByRole("button", { name: "Abrir investigação" }).click();
   await expect(a).toHaveURL(/\/investigacao\/[0-9a-f-]{36}$/);
   await expect(a.getByTestId("my-role")).toHaveText(`Você · ${def.roles.A.name}`);

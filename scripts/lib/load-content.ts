@@ -78,7 +78,8 @@ export function loadCases(dir = join(CONTENT_DIR, "cases")) {
         continue;
       }
       if (report.definition.id !== name) problems.push(`${name}: o id do caso (${report.definition.id}) difere da pasta`);
-      cases.push({ dir: base, definition: report.definition, contentHash: contentHash(report.definition), warnings: report.warnings });
+      // Hash do conteúdo-FONTE (antes de defaults do schema): evoluir o motor não invalida versões publicadas.
+      cases.push({ dir: base, definition: report.definition, contentHash: contentHash(merged), warnings: report.warnings });
     } catch (error) {
       problems.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
     }

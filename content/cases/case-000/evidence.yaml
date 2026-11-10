@@ -1,0 +1,192 @@
+# Caso 000 — Treinamento: evidências.
+
+- id: ev.como-funciona
+  title: Como funciona
+  kind: document
+  visibleTo: both
+  summary: Guia rápido do treinamento. Leia primeiro.
+  body:
+    - type: heading
+      text: Duas perspectivas
+    - type: text
+      text: Vocês dois veem este documento. Quase todo o resto, não — cada papel tem os próprios arquivos, e o parceiro não vê os seus.
+    - type: list
+      items:
+        - "Arquivos: suas evidências. As novas aparecem destacadas."
+        - "Compartilhar: algumas evidências podem ser enviadas ao parceiro (botão no fim do documento). As que são peça de enigma não podem — descreva o que importa."
+        - "Quadro: fixe evidências, crie anotações, agrupe, marque como hipótese, confirmado ou contradição, e conecte itens."
+        - "Chat: o ícone de balão no topo. Dá para anexar uma evidência — o parceiro vê que ela existe, mas não o conteúdo, se não tiver acesso."
+        - "Enigmas: cada um vê a sua parte do enunciado. Peça dicas se travar; elas vêm aos poucos."
+        - "Diário: a linha do tempo do que a dupla já fez."
+    - type: stamp
+      text: CONVERSEM
+
+# ---------------------------------------------------------------------------
+# Capítulo 1 — cadeado (código)
+# ---------------------------------------------------------------------------
+- id: ev.legenda
+  title: Legenda do cadeado
+  kind: document
+  visibleTo: A
+  summary: O valor de cada símbolo do cadeado da Sala 3.
+  body:
+    - type: text
+      text: O cadeado tem símbolos no lugar dos números. Esta legenda diz quanto vale cada um — mas não a ordem.
+    - type: table
+      columns: [Símbolo, Dígito]
+      rows:
+        - ["●", "1"]
+        - ["◆", "4"]
+        - ["▲", "7"]
+        - ["■", "9"]
+
+- id: ev.etiqueta
+  title: Etiqueta no cadeado
+  kind: object
+  visibleTo: B
+  summary: Uma etiqueta colada no próprio cadeado.
+  body:
+    - type: text
+      text: Alguém colou no cadeado a sequência da senha, da esquerda para a direita. Você não sabe quanto vale cada símbolo — o Arquivo sabe.
+    - type: stamp
+      text: ▲  ◆  ●
+
+- id: ev.memorando
+  title: Memorando do instrutor
+  kind: document
+  visibleTo: A
+  share: full
+  summary: Exemplo de evidência que pode ser enviada ao parceiro.
+  body:
+    - type: handwriting
+      text: "Treinamento de dupla: a Sala 3 amanheceu destrancada. Descubram quem saiu por último."
+      note: Este documento pode ser compartilhado. Toque em “Enviar cópia” e veja no aparelho do parceiro.
+
+- id: ev.foto-sala
+  title: Foto da Sala 3
+  kind: photo
+  visibleTo: B
+  share: full
+  summary: A porta da Sala 3, aberta, de manhã.
+  body:
+    - type: text
+      text: A porta da Sala 3 está entreaberta. O cadeado está pendurado, fechado, na maçaneta.
+    - type: text
+      text: Esta evidência também pode ser compartilhada com o parceiro.
+
+# ---------------------------------------------------------------------------
+# Capítulo 2 — correspondência e sequência
+# ---------------------------------------------------------------------------
+- id: ev.fichas
+  title: Fichas dos alunos
+  kind: person
+  visibleTo: A
+  availableWhen: { chapterReached: ch.intermediario }
+  summary: Quem usa os armários da Sala 3.
+  body:
+    - type: table
+      columns: [Aluno, Especialidade]
+      rows:
+        - ["Bia", "Fotografia pericial"]
+        - ["Caio", "Mecânica de veículos"]
+        - ["Duda", "Primeiros socorros"]
+
+- id: ev.armarios
+  title: Conteúdo dos armários
+  kind: object
+  visibleTo: B
+  availableWhen: { chapterReached: ch.intermediario }
+  summary: O que há em cada armário da Sala 3.
+  body:
+    - type: table
+      columns: [Armário, Conteúdo]
+      rows:
+        - ["Armário 1", "Câmera, lentes e um tripé"]
+        - ["Armário 2", "Estetoscópio e gaze"]
+        - ["Armário 3", "Chave inglesa e luvas sujas de graxa"]
+
+- id: ev.ponto
+  title: Relógio de ponto
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.intermediario }
+  summary: Dois registros com horário exato.
+  body:
+    - type: table
+      columns: [Hora, Registro]
+      rows:
+        - ["07h50", "Portão principal aberto"]
+        - ["08h20", "Teste do alarme de incêndio"]
+
+- id: ev.zelador
+  title: Relato do zelador
+  kind: testimony
+  visibleTo: B
+  availableWhen: { chapterReached: ch.intermediario }
+  summary: O que o zelador lembra da manhã.
+  body:
+    - type: quote
+      speaker: Zelador
+      text: O café foi servido às 08h05, como sempre. E a reunião com o instrutor começou às 08h40 — foi aí que ele percebeu a Sala 3 aberta.
+
+# ---------------------------------------------------------------------------
+# Capítulo 3 — contradições e mecanismo
+# ---------------------------------------------------------------------------
+- id: ev.portaria
+  title: Registro da portaria
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.avancado }
+  summary: Entradas e saídas da noite anterior.
+  body:
+    - type: table
+      columns: [Pessoa, Entrada, Saída]
+      rows:
+        - ["Bia", "13h00", "19h02"]
+        - ["Caio", "13h00", "18h00"]
+        - ["Duda", "14h00", "18h10"]
+        - ["Eli", "18h40", "19h20"]
+    - type: text
+      text: A portaria só registra a porta principal. Use isto para julgar as afirmações que estão com o seu PARCEIRO.
+
+- id: ev.corredor
+  title: Câmera do corredor
+  kind: record
+  visibleTo: B
+  availableWhen: { chapterReached: ch.avancado }
+  summary: O que a câmera do corredor da Sala 3 gravou.
+  body:
+    - type: table
+      columns: [Hora, Imagem]
+      rows:
+        - ["18h30", "Caio passa pelo corredor e entra na Sala 3"]
+        - ["18h45", "Eli na Sala 3, com a luz acesa"]
+        - ["19h00", "Bia sai da Sala 3 com uma pasta"]
+    - type: text
+      text: Use isto para julgar as afirmações que estão com o seu PARCEIRO.
+
+- id: ev.manual-a
+  title: Manual do painel (parte 1)
+  kind: document
+  visibleTo: A
+  availableWhen: { chapterReached: ch.avancado }
+  summary: Metade das instruções do painel da Sala 3.
+  body:
+    - type: list
+      items:
+        - O painel tem chaves (com você) e uma alavanca (com o Campo).
+        - Comece pela Chave 2.
+        - A Chave 1 é sempre o último comando.
+
+- id: ev.manual-b
+  title: Manual do painel (parte 2)
+  kind: document
+  visibleTo: B
+  availableWhen: { chapterReached: ch.avancado }
+  summary: A outra metade das instruções do painel.
+  body:
+    - type: list
+      items:
+        - A alavanca está com você; as chaves, com o Arquivo.
+        - Puxe a alavanca logo depois da primeira chave — nem antes, nem depois.
+        - Comando fora de ordem trava o painel e ele volta ao início.

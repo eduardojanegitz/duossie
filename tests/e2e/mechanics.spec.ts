@@ -55,7 +55,7 @@ test("contradições, mecanismo e decisão conjunta funcionam entre os dois joga
   const { a, b, close } = await pairDuo(browser);
 
   await a.goto(`/casos/${def.id}`);
-  await a.getByRole("radio", { name: new RegExp(def.roles.A.name) }).check();
+  await a.getByRole("radio", { name: new RegExp(`^${def.roles.A.name}`) }).check();
   await a.getByRole("button", { name: "Abrir investigação" }).click();
   await expect(a.getByTestId("my-role")).toBeVisible();
   await b.goto(`/casos/${def.id}`);

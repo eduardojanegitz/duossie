@@ -135,6 +135,16 @@ E-mails locais (códigos OTP) aparecem no Mailpit: http://127.0.0.1:54324.
 Usuários locais permitidos: `investigador.a@duossie.test`, `investigador.b@duossie.test`,
 `investigador.c@duossie.test`.
 
+### Jogar o treinamento sozinho (Caso 000)
+
+O Caso 000 é didático e não revela nada dos outros casos. Para jogar os dois papéis:
+
+1. `npm run dev:seed-duo` (cria a dupla Corvo & Lince) e `npm run dev`.
+2. Navegador normal: entre com `investigador.a@duossie.test`. Janela anônima (ou outro navegador):
+   `investigador.b@duossie.test`. Os códigos chegam no Mailpit (http://127.0.0.1:54324).
+3. Num deles, abra o Caso 000 e escolha um papel; no outro, "Continuar investigação".
+4. Siga os enunciados — cada enigma diz qual mecânica está treinando.
+
 ### Variáveis
 
 | Variável | Onde | Descrição |

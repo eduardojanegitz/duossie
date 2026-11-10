@@ -23,7 +23,7 @@ test("quadro e chat: colaboração em tempo real sem vazar evidências exclusiva
 
   await a.getByRole("link", { name: "Ir para a central" }).click();
   await a.getByRole("link", { name: /^Caso 001:/ }).click();
-  await a.getByRole("radio", { name: new RegExp(def.roles.A.name) }).check();
+  await a.getByRole("radio", { name: new RegExp(`^${def.roles.A.name}`) }).check();
   await a.getByRole("button", { name: "Abrir investigação" }).click();
   await expect(a.getByTestId("my-role")).toBeVisible();
 

@@ -6,6 +6,17 @@ number: 1
 title: Arquivos Desaparecidos
 tagline: Quatro arquivos. Nenhum deveria existir.
 cases:
+  - id: case-000
+    code: "000"
+    title: Treinamento — A Sala 3
+    synopsis: >-
+      Um caso curto e didático para conhecer a dinâmica do Duossie: evidências separadas,
+      quadro, chat, os cinco tipos de enigma, uma decisão conjunta e o relatório final.
+      Não revela nada dos outros casos.
+    category: Treinamento
+    difficulty: easy
+    duration: { min: 10, max: 15 }
+    cover: folder
   - id: case-001
     code: "001"
     title: O Último Trem das 23h47

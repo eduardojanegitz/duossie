@@ -25,7 +25,7 @@ describe("catálogo público", () => {
     const { data: seasons } = await a.client.from("seasons").select("id");
     const { data: cases } = await a.client.from("cases").select("id, code").order("code");
     expect(seasons?.length).toBeGreaterThan(0);
-    expect(cases?.[0]).toMatchObject({ id: "case-001", code: "001" });
+    expect(cases).toEqual(expect.arrayContaining([{ id: "case-001", code: "001" }]));
   });
 
   it("cliente não consegue alterar o catálogo (ex.: liberar um caso)", async () => {

@@ -1,0 +1,147 @@
+# Caso 000 — Treinamento: um enigma de cada tipo.
+
+- id: pz.cadeado
+  type: code
+  title: O cadeado da Sala 3
+  inputLabel: Senha de 3 dígitos
+  prompt:
+    A: >-
+      TIPO: COMBINAÇÃO. Você tem o valor de cada símbolo; o Campo tem a ordem. Pergunte a
+      sequência, converta e digite a senha. Qualquer um dos dois pode digitar.
+    B: >-
+      TIPO: COMBINAÇÃO. Você tem a ordem dos símbolos; o Arquivo sabe quanto vale cada um.
+      Descreva a sequência e montem a senha juntos.
+  requires: { A: [ev.legenda], B: [ev.etiqueta] }
+  answer: { accepted: ["741"] }
+  hints:
+    A:
+      - text: Peça ao parceiro a sequência de símbolos da etiqueta.
+      - text: Troque cada símbolo pelo dígito da legenda, mantendo a ordem.
+      - text: Três símbolos, três dígitos. Comece pelo triângulo.
+    B:
+      - text: Diga ao parceiro os símbolos da etiqueta, da esquerda para a direita.
+      - text: O parceiro tem a tabela de valores. Peça a conversão.
+      - text: O primeiro símbolo é o triângulo.
+  onSolve:
+    - startChapter: ch.intermediario
+  solvedText: O cadeado abriu. Repare que o capítulo mudou para os dois ao mesmo tempo.
+
+- id: pz.crachas
+  type: match
+  title: De quem é cada armário?
+  availableWhen: { chapterReached: ch.intermediario }
+  prompt:
+    A: >-
+      TIPO: IDENTIFICAÇÃO. Você sabe a especialidade de cada aluno; o Campo sabe o que há em
+      cada armário. Liguem cada aluno ao seu armário.
+    B: >-
+      TIPO: IDENTIFICAÇÃO. Você sabe o que há em cada armário; o Arquivo sabe a especialidade
+      de cada aluno. Liguem cada aluno ao seu armário.
+  requires: { A: [ev.fichas], B: [ev.armarios] }
+  left:
+    - { id: bia, label: Bia }
+    - { id: caio, label: Caio }
+    - { id: duda, label: Duda }
+  options:
+    - { id: a1, label: Armário 1 }
+    - { id: a2, label: Armário 2 }
+    - { id: a3, label: Armário 3 }
+  answer: { pairs: { bia: a1, caio: a3, duda: a2 } }
+  hints:
+    A:
+      - text: Pergunte o que tem em cada armário e pense em quem usaria aquilo.
+      - text: Uma câmera combina com fotografia.
+    B:
+      - text: Pergunte a especialidade de cada aluno.
+      - text: Graxa combina com mecânica.
+  solvedText: "Armários identificados. Ao errar, o jogo diz quantos itens estavam certos — use isso para ajustar."
+
+- id: pz.ordem
+  type: sequence
+  title: A manhã em ordem
+  availableWhen: { chapterReached: ch.intermediario }
+  prompt:
+    A: >-
+      TIPO: CRONOLOGIA. Você tem o horário de dois fatos; o Campo, dos outros dois. Ordenem do
+      primeiro ao último usando as setas.
+    B: >-
+      TIPO: CRONOLOGIA. Você tem o horário de dois fatos; o Arquivo, dos outros dois. Ordenem do
+      primeiro ao último usando as setas.
+  requires: { A: [ev.ponto], B: [ev.zelador] }
+  items:
+    - { id: reuniao, label: Começa a reunião com o instrutor. }
+    - { id: alarme, label: O alarme de incêndio é testado. }
+    - { id: portao, label: O portão principal é aberto. }
+    - { id: cafe, label: O café é servido. }
+  answer: { order: [portao, cafe, alarme, reuniao] }
+  hints:
+    A:
+      - text: Troque horários com o parceiro — cada um tem dois.
+      - text: O primeiro fato do dia é às 07h50.
+    B:
+      - text: Troque horários com o parceiro — cada um tem dois.
+      - text: A reunião é o último fato.
+  solvedText: Linha do tempo montada. Quando os dois enigmas deste capítulo forem resolvidos, o próximo abre.
+
+- id: pz.versoes
+  type: contradiction
+  title: As versões dos alunos
+  availableWhen: { chapterReached: ch.avancado }
+  prompt:
+    A: >-
+      TIPO: CONTRADIÇÕES. Você vê duas afirmações; o Campo vê outras duas. Quem desmente as
+      SUAS afirmações é a evidência do parceiro, e vice-versa. Cada um marca as suas que não se
+      sustentam e envia. O jogo só avalia quando os dois enviarem.
+    B: >-
+      TIPO: CONTRADIÇÕES. Você vê duas afirmações; o Arquivo vê outras duas. Quem desmente as
+      SUAS afirmações é a evidência do parceiro, e vice-versa. Cada um marca as suas que não se
+      sustentam e envia. O jogo só avalia quando os dois enviarem.
+  requires: { A: [ev.portaria], B: [ev.corredor] }
+  statements:
+    - { id: caio, source: Caio, label: "Fui embora às 18h e não voltei mais.", visibleTo: A }
+    - { id: bia, source: Bia, label: "Fiquei até umas sete horas revisando fotos na Sala 3.", visibleTo: A }
+    - { id: duda, source: Duda, label: "Fiquei de plantão na enfermaria até as 19h.", visibleTo: B }
+    - { id: eli, source: Eli, label: "Cheguei depois das seis e meia e fui direto para a Sala 3.", visibleTo: B }
+  answer: { inconsistent: [caio, duda] }
+  hints:
+    A:
+      - text: Leia suas afirmações em voz alta para o parceiro; ele tem a câmera do corredor.
+      - text: Use a sua portaria para julgar as afirmações que o parceiro tem.
+      - text: Uma das suas afirmações é desmentida pela câmera às 18h30.
+    B:
+      - text: Leia suas afirmações em voz alta para o parceiro; ele tem a portaria.
+      - text: Use a sua câmera para julgar as afirmações que o parceiro tem.
+      - text: Uma das suas afirmações é desmentida pela saída às 18h10.
+  solvedText: Duas versões caíram. Repare que nenhum dos dois conseguiria resolver só com o que via.
+
+- id: pz.painel
+  type: mechanism
+  title: O painel da Sala 3
+  availableWhen: { chapterReached: ch.avancado }
+  prompt:
+    A: >-
+      TIPO: MECANISMO. Você controla as chaves; o Campo controla a alavanca. Cada um tem metade
+      do manual. Combinem a ordem antes de apertar — um erro trava o painel e ele volta ao início.
+    B: >-
+      TIPO: MECANISMO. Você controla a alavanca; o Arquivo controla as chaves. Cada um tem metade
+      do manual. Combinem a ordem antes de puxar — um erro trava o painel e ele volta ao início.
+  requires: { A: [ev.manual-a], B: [ev.manual-b] }
+  controls:
+    A:
+      - { id: chave-1, label: Chave 1 }
+      - { id: chave-2, label: Chave 2 }
+    B:
+      - { id: alavanca, label: Alavanca }
+  answer:
+    steps:
+      - { role: A, control: chave-2 }
+      - { role: B, control: alavanca }
+      - { role: A, control: chave-1 }
+  hints:
+    A:
+      - text: Leia sua metade do manual para o parceiro e peça a dele.
+      - text: Chave 2 primeiro; Chave 1 por último. E no meio?
+    B:
+      - text: Leia sua metade do manual para o parceiro e peça a dele.
+      - text: Você puxa a alavanca logo depois da primeira chave do parceiro.
+  solvedText: O painel acendeu. Agora há uma decisão conjunta na aba Enigmas.
