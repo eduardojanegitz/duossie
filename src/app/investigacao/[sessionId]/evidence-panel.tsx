@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Pin, Send } from "lucide-react";
 import type { EvidenceView, PlayerView } from "@/engine";
 import { EvidenceDocument } from "@/components/case/evidence-document";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
+import { useCollab } from "./use-collab";
 import { useGameAction } from "./use-game-action";
 
 const KIND_LABEL: Record<string, string> = {
@@ -25,8 +26,18 @@ const ORIGIN_LABEL: Record<EvidenceView["origin"], string> = {
   shared: "Enviada pelo parceiro",
 };
 
-export function EvidencePanel({ view, partnerName }: { view: PlayerView & { sessionId: string }; partnerName: string }) {
+export function EvidencePanel({
+  view,
+  partnerName,
+  pinned,
+}: {
+  view: PlayerView & { sessionId: string };
+  partnerName: string;
+  pinned: Set<string>;
+}) {
   const { dispatch, pending } = useGameAction(view.sessionId);
+  const collab = useCollab(view.sessionId);
+  const [pinPrivate, setPinPrivate] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const open = view.evidence.find((e) => e.id === openId) ?? null;
@@ -94,6 +105,36 @@ export function EvidencePanel({ view, partnerName }: { view: PlayerView & { sess
                 <EvidenceDocument blocks={open.body} />
               </div>
               <div className="flex flex-col gap-2 px-4 pt-6">
+                {pinned.has(open.id) ? (
+                  <p className="text-sm text-amber-400">Está no seu quadro.</p>
+                ) : (
+                  <div className="flex flex-col gap-2 rounded-sm border border-ink-700 p-3">
+                    <Button
+                      variant="outline"
+                      block
+                      disabled={collab.pending}
+                      onClick={async () => {
+                        setError(null);
+                        const e = await collab.board({ type: "pin", evidenceId: open.id, visibility: pinPrivate ? "private" : "shared" });
+                        if (e) setError(e);
+                      }}
+                    >
+                      <Pin aria-hidden /> Fixar no quadro
+                    </Button>
+                    <label className="flex min-h-11 items-center gap-3 text-sm text-paper-300">
+                      <input
+                        type="checkbox"
+                        checked={pinPrivate}
+                        onChange={(e) => setPinPrivate(e.target.checked)}
+                        className="size-4 accent-[var(--amber-500)]"
+                      />
+                      Só no meu quadro (privado)
+                    </label>
+                    {open.origin === "own" && !pinPrivate ? (
+                      <p className="text-xs text-paper-500">No quadro compartilhado, {partnerName} verá o cartão tarjado — sem o conteúdo.</p>
+                    ) : null}
+                  </div>
+                )}
                 {open.canShare ? (
                   <Button variant="outline" block disabled={pending} onClick={() => share(open)}>
                     <Send aria-hidden />

@@ -26,6 +26,7 @@ O caso precisa existir no catálogo da temporada com o mesmo `id` (`case-NNN`).
 | Enigma (`pz.*`) | `code`, `sequence` ou `match`. Tem enunciado por papel, dicas por papel, `requires` por papel, resposta e efeitos `onSolve`. |
 | Evento (`evt.*`) | Disparado automaticamente (uma vez) quando `when` fica verdadeiro. |
 | Flag (`fl.*`) | Marcador definido por efeitos e usado em condições. |
+| Decisão (`dc.*`) | `individual` (com `role`) ou `joint`. Opções com `outcome` (texto da consequência) e `effects`. |
 | Relatório | Perguntas `single`/`multiple` com gabarito, peso e explicação; vereditos `closed`/`partial`/`archived` por pontuação. |
 
 ### Condições (dados, nunca código)
@@ -37,6 +38,7 @@ availableWhen: { puzzleSolved: pz.cofre }
 availableWhen: { flag: fl.porta-aberta }
 availableWhen: { evidenceSeen: { id: ev.carta, by: both } }   # A | B | any | both
 availableWhen: { all: [ { puzzleSolved: pz.a }, { not: { flag: fl.b } } ] }
+availableWhen: { decisionMade: { id: dc.denunciar, option: agora } }   # option é opcional
 availableWhen: { any: [ ... ] }
 ```
 
@@ -72,7 +74,36 @@ onSolve:
   left: [{ id: x, label: "..." }, ...]
   options: [{ id: o1, label: "..." }, ...]
   answer: { pairs: { x: o1, ... } }
+
+- id: pz.mentiras
+  type: contradiction                   # cada papel marca as próprias; avaliação conjunta
+  statements:
+    - { id: a1, source: "Testemunha", label: "...", visibleTo: A }
+    - { id: b1, source: "Outra", label: "...", visibleTo: B }
+  answer: { inconsistent: [a1] }
+
+- id: pz.eclusa
+  type: mechanism                       # ordem alternada; erro volta ao início
+  controls: { A: [{ id: v1, label: "Válvula 1" }], B: [{ id: c1, label: "Comporta 1" }] }
+  answer: { steps: [{ role: A, control: v1 }, { role: B, control: c1 }, ...] }
 ```
+
+### Decisões
+
+```yaml
+decisions:
+  - id: dc.denunciar
+    kind: joint                         # ou: kind: individual + role: A
+    title: Chamar a polícia agora?
+    prompt: "..."
+    availableWhen: { puzzleSolved: pz.eclusa }
+    options:
+      - { id: agora, label: Agora, outcome: "O que acontece.", effects: [{ setFlag: fl.policia }] }
+      - { id: esperar, label: Esperar, outcome: "O que acontece.", effects: [] }
+```
+
+Evite escolhas decorativas: toda opção precisa de uma consequência perceptível (`outcome`) e,
+idealmente, de efeitos que mudem o que vem depois.
 
 Todo enigma declara `requires: { A: [...], B: [...] }`. **Regra de cooperação**: cada lado
 precisa citar pelo menos uma evidência exclusiva dele — senão o validador recusa o caso.

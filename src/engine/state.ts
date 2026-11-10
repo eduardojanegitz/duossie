@@ -5,7 +5,7 @@ export type FeedEntry = {
   at: string;
   /** Destinatário: um papel ou os dois. */
   to: Role | "both";
-  kind: "notice" | "chapter" | "shared" | "solved" | "theory";
+  kind: "notice" | "chapter" | "shared" | "solved" | "theory" | "decision" | "puzzle";
   text?: string;
   /** Referência (evidência, enigma, capítulo) quando aplicável. */
   ref?: string;
@@ -35,6 +35,11 @@ export type SessionState = {
   attempts: Record<string, number>;
   hints: Record<string, Record<Role, number>>;
   firedEvents: string[];
+  /** Marcações enviadas em enigmas de contradição (por papel), até os dois enviarem. */
+  parts: Record<string, Partial<Record<Role, string[]>>>;
+  /** Progresso atual de enigmas de mecanismo (quantos passos certos em sequência). */
+  mechanisms: Record<string, number>;
+  decisions: Record<string, { votes: Partial<Record<Role, string>>; resolved?: string; at?: string }>;
   feed: FeedEntry[];
   theory: {
     draft: TheoryAnswers | null;
@@ -58,6 +63,9 @@ export function initialState(def: CaseDefinition): SessionState {
     attempts: {},
     hints: {},
     firedEvents: [],
+    parts: {},
+    mechanisms: {},
+    decisions: {},
     feed: [],
     theory: { draft: null, proposedBy: null, confirmedBy: [], verdicts: [] },
   };
@@ -65,4 +73,9 @@ export function initialState(def: CaseDefinition): SessionState {
 
 export function otherRole(role: Role): Role {
   return role === "A" ? "B" : "A";
+}
+
+/** Completa campos adicionados em versões posteriores do motor (sessões antigas). */
+export function normalizeState(state: SessionState): SessionState {
+  return { ...state, parts: state.parts ?? {}, mechanisms: state.mechanisms ?? {}, decisions: state.decisions ?? {} };
 }

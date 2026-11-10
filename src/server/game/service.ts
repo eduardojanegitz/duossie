@@ -56,9 +56,9 @@ type SessionRow = {
   state_version: number;
 };
 
-type PlayerContext = { session: SessionRow; role: Role; def: CaseDefinition; partnerId: string | null };
+export type PlayerContext = { session: SessionRow; role: Role; def: CaseDefinition; partnerId: string | null };
 
-async function loadContext(viewer: Viewer, sessionId: string): Promise<PlayerContext> {
+export async function loadContext(viewer: Viewer, sessionId: string): Promise<PlayerContext> {
   if (!viewer.duo) throw new GameError("forbidden");
   const db = createSupabaseAdminClient();
   const [{ data: session }, { data: players }] = await Promise.all([

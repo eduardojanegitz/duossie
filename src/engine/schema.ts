@@ -17,6 +17,7 @@ export const chapterId = id("ch");
 export const flagId = id("fl");
 export const eventId = id("evt");
 export const questionId = id("q");
+export const decisionId = id("dc");
 
 // ---------------------------------------------------------------------------
 // Condições (AST interpretada por `conditions.ts`)
@@ -29,7 +30,8 @@ export type Condition =
   | { flag: string }
   | { puzzleSolved: string }
   | { chapterReached: string }
-  | { evidenceSeen: { id: string; by: "A" | "B" | "any" | "both" } };
+  | { evidenceSeen: { id: string; by: "A" | "B" | "any" | "both" } }
+  | { decisionMade: { id: string; option?: string } };
 
 export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
   z.union([
@@ -43,6 +45,11 @@ export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
     z
       .object({
         evidenceSeen: z.object({ id: evidenceId, by: z.enum(["A", "B", "any", "both"]) }).strict(),
+      })
+      .strict(),
+    z
+      .object({
+        decisionMade: z.object({ id: decisionId, option: z.string().optional() }).strict(),
       })
       .strict(),
   ]),
@@ -155,6 +162,48 @@ export const puzzleSchema = z.discriminatedUnion("type", [
       answer: z.object({ pairs: z.record(z.string(), z.string()) }).strict(),
     })
     .strict(),
+  z
+    .object({
+      ...puzzleBase,
+      /**
+       * Contradições: cada papel vê parte das afirmações e marca as que não se sustentam.
+       * O enigma só é avaliado quando os dois enviam suas marcações.
+       */
+      type: z.literal("contradiction"),
+      statements: z
+        .array(
+          z
+            .object({
+              id: z.string().regex(/^[a-z0-9-]{1,30}$/),
+              source: z.string().min(1),
+              label: z.string().min(2),
+              visibleTo: z.enum(["A", "B"]),
+            })
+            .strict(),
+        )
+        .min(4),
+      answer: z.object({ inconsistent: z.array(z.string()).min(1) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...puzzleBase,
+      /**
+       * Mecanismo: cada papel controla alguns comandos; a ordem certa alterna entre os dois.
+       * Um comando fora de ordem trava o mecanismo e ele volta ao início.
+       */
+      type: z.literal("mechanism"),
+      controls: z
+        .object({
+          A: z.array(z.object({ id: z.string().regex(/^[a-z0-9-]{1,30}$/), label: z.string().min(1) }).strict()).min(1),
+          B: z.array(z.object({ id: z.string().regex(/^[a-z0-9-]{1,30}$/), label: z.string().min(1) }).strict()).min(1),
+        })
+        .strict(),
+      answer: z
+        .object({ steps: z.array(z.object({ role: roleSchema, control: z.string() }).strict()).min(3) })
+        .strict(),
+    })
+    .strict(),
 ]);
 export type Puzzle = z.infer<typeof puzzleSchema>;
 
@@ -205,6 +254,36 @@ export const gameEventSchema = z
   })
   .strict();
 
+// ---------------------------------------------------------------------------
+// Decisões
+// ---------------------------------------------------------------------------
+export const decisionSchema = z
+  .object({
+    id: decisionId,
+    /** individual: só o papel `role` decide; joint: os dois precisam escolher a mesma opção. */
+    kind: z.enum(["individual", "joint"]),
+    role: roleSchema.optional(),
+    title: z.string().min(2).max(80),
+    prompt: z.string().min(2),
+    availableWhen: conditionSchema.optional(),
+    options: z
+      .array(
+        z
+          .object({
+            id: z.string().regex(/^[a-z0-9-]{1,30}$/),
+            label: z.string().min(1),
+            /** Consequência mostrada depois da decisão (precisa ser perceptível). */
+            outcome: z.string().min(2),
+            effects: z.array(effectSchema).default([]),
+          })
+          .strict(),
+      )
+      .min(2),
+  })
+  .strict()
+  .refine((d) => (d.kind === "individual") === (d.role !== undefined), "decisão individual exige `role` (e conjunta não aceita)");
+export type Decision = z.infer<typeof decisionSchema>;
+
 export const caseDefinitionSchema = z
   .object({
     id: z.string().regex(/^case-\d{3}$/),
@@ -221,6 +300,7 @@ export const caseDefinitionSchema = z
     evidence: z.array(evidenceSchema).min(1),
     puzzles: z.array(puzzleSchema),
     events: z.array(gameEventSchema).default([]),
+    decisions: z.array(decisionSchema).default([]),
     theory: z
       .object({
         availableWhen: conditionSchema,

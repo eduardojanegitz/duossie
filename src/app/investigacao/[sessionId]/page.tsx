@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { LoadingFile } from "@/components/layout/screen";
 import { requireViewer } from "@/server/auth/viewer";
+import { getBoard, getMessages } from "@/server/game/collab";
 import { GameError, getPlayerView } from "@/server/game/service";
 import { InvestigationClient } from "./investigation-client";
 
@@ -23,9 +24,13 @@ async function Investigation({ params }: { params: PageProps<"/investigacao/[ses
   const { sessionId } = await params;
   if (!UUID.test(sessionId)) notFound();
 
-  let view;
+  let view, board, chat;
   try {
-    view = await getPlayerView(viewer, sessionId);
+    [view, board, chat] = await Promise.all([
+      getPlayerView(viewer, sessionId),
+      getBoard(viewer, sessionId),
+      getMessages(viewer, sessionId),
+    ]);
   } catch (error) {
     if (error instanceof GameError && (error.code === "not_found" || error.code === "forbidden")) notFound();
     throw error;
@@ -38,6 +43,8 @@ async function Investigation({ params }: { params: PageProps<"/investigacao/[ses
   return (
     <InvestigationClient
       view={view}
+      board={board}
+      chat={chat}
       duoId={duo.id}
       me={{ id: me.id, name: me.codename ?? "Você" }}
       partner={{ id: partner.id, name: partner.codename ?? "Parceiro" }}

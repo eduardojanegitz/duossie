@@ -20,6 +20,11 @@ export function evaluate(condition: Condition | undefined, state: SessionState):
     if (by === "both") return a && b;
     return a || b;
   }
+  if ("decisionMade" in condition) {
+    const made = state.decisions[condition.decisionMade.id]?.resolved;
+    if (!made) return false;
+    return condition.decisionMade.option === undefined || made === condition.decisionMade.option;
+  }
   const exhaustive: never = condition;
   throw new Error(`condição desconhecida: ${JSON.stringify(exhaustive)}`);
 }
@@ -30,8 +35,15 @@ export function conditionRefs(condition: Condition | undefined): {
   puzzles: string[];
   chapters: string[];
   evidence: string[];
+  decisions: { id: string; option?: string }[];
 } {
-  const refs = { flags: [] as string[], puzzles: [] as string[], chapters: [] as string[], evidence: [] as string[] };
+  const refs = {
+    flags: [] as string[],
+    puzzles: [] as string[],
+    chapters: [] as string[],
+    evidence: [] as string[],
+    decisions: [] as { id: string; option?: string }[],
+  };
   const walk = (c: Condition | undefined) => {
     if (!c || "always" in c) return;
     if ("all" in c) return c.all.forEach(walk);
@@ -41,6 +53,7 @@ export function conditionRefs(condition: Condition | undefined): {
     if ("puzzleSolved" in c) return void refs.puzzles.push(c.puzzleSolved);
     if ("chapterReached" in c) return void refs.chapters.push(c.chapterReached);
     if ("evidenceSeen" in c) return void refs.evidence.push(c.evidenceSeen.id);
+    if ("decisionMade" in c) return void refs.decisions.push(c.decisionMade);
   };
   walk(condition);
   return refs;

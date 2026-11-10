@@ -27,6 +27,28 @@ test("capturas das telas da investigação (mobile)", async ({ browser }) => {
   await a.keyboard.press("Escape");
   await nav.getByRole("button", { name: /^Enigmas/ }).click();
   await a.screenshot({ path: `${OUT}/05-enigmas.png`, fullPage: true });
+
+  // Quadro: fixa duas evidências e uma anotação, conecta, e captura lista (celular) e mesa (desktop).
+  await nav.getByRole("button", { name: /^Arquivos/ }).click();
+  for (const index of [0, 1]) {
+    await a.getByTestId("evidence-list").getByRole("button").nth(index).click();
+    await a.getByRole("button", { name: "Fixar no quadro" }).click();
+    await expect(a.getByText("Está no seu quadro.")).toBeVisible();
+    await a.keyboard.press("Escape");
+  }
+  await nav.getByRole("button", { name: /^Quadro/ }).click();
+  await a.getByRole("button", { name: "Nova anotação" }).click();
+  await a.getByLabel("Anotação").fill("Hipótese de teste para a captura de tela.");
+  await a.getByRole("button", { name: "Adicionar" }).click();
+  const first = a.getByTestId("board-item").first();
+  await first.getByLabel("Conectar com").selectOption({ index: 1 });
+  await first.getByRole("button", { name: "Conectar" }).click();
+  await a.waitForTimeout(800);
+  await a.screenshot({ path: `${OUT}/06-quadro-lista.png`, fullPage: true });
+  await a.setViewportSize({ width: 1280, height: 800 });
+  await a.getByRole("button", { name: "Mesa" }).click();
+  await a.waitForTimeout(500);
+  await a.screenshot({ path: `${OUT}/07-quadro-mesa.png` });
   await close();
   void b;
   await deleteTestUsers();

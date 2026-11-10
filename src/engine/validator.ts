@@ -1,6 +1,6 @@
 import { evidenceAccessible, evidenceUnlocked, puzzleAvailable, theoryAvailable } from "./availability";
-import { conditionRefs } from "./conditions";
-import { solutionOf } from "./puzzles";
+import { conditionRefs, evaluate } from "./conditions";
+import { solutionActions } from "./puzzles";
 import { reduce, type GameAction } from "./reducer";
 import { caseDefinitionSchema, ROLES, type CaseDefinition, type Condition, type Effect, type Role } from "./schema";
 import { initialState, type SessionState } from "./state";
@@ -44,6 +44,7 @@ function staticChecks(def: CaseDefinition): ValidationReport {
     ...def.puzzles.map((p) => p.id),
     ...def.events.map((e) => e.id),
     ...def.theory.questions.map((q) => q.id),
+    ...def.decisions.map((d) => d.id),
   ];
   const seenIds = new Set<string>();
   for (const id of ids) {
@@ -54,7 +55,12 @@ function staticChecks(def: CaseDefinition): ValidationReport {
   const evidence = new Map(def.evidence.map((e) => [e.id, e]));
   const puzzles = new Set(def.puzzles.map((p) => p.id));
   const chapters = new Set(def.chapters.map((c) => c.id));
-  const allEffects: Effect[] = [...def.puzzles.flatMap((p) => p.onSolve), ...def.events.flatMap((e) => e.effects)];
+  const decisions = new Map(def.decisions.map((d) => [d.id, d]));
+  const allEffects: Effect[] = [
+    ...def.puzzles.flatMap((p) => p.onSolve),
+    ...def.events.flatMap((e) => e.effects),
+    ...def.decisions.flatMap((d) => d.options.flatMap((o) => o.effects)),
+  ];
   const settableFlags = new Set(allEffects.flatMap((e) => ("setFlag" in e ? [e.setFlag] : [])));
 
   const checkCondition = (where: string, c: Condition | undefined) => {
@@ -63,6 +69,11 @@ function staticChecks(def: CaseDefinition): ValidationReport {
     for (const p of refs.puzzles) if (!puzzles.has(p)) errors.push(`${where}: enigma inexistente ${p}`);
     for (const ch of refs.chapters) if (!chapters.has(ch)) errors.push(`${where}: capítulo inexistente ${ch}`);
     for (const e of refs.evidence) if (!evidence.has(e)) errors.push(`${where}: evidência inexistente ${e}`);
+    for (const d of refs.decisions) {
+      const dec = decisions.get(d.id);
+      if (!dec) errors.push(`${where}: decisão inexistente ${d.id}`);
+      else if (d.option && !dec.options.some((o) => o.id === d.option)) errors.push(`${where}: opção inexistente ${d.id}/${d.option}`);
+    }
   };
   const checkEffects = (where: string, effects: readonly Effect[]) => {
     for (const e of effects) {
@@ -79,6 +90,17 @@ function staticChecks(def: CaseDefinition): ValidationReport {
     checkEffects(e.id, e.effects);
   }
   checkCondition("theory", def.theory.availableWhen);
+
+  for (const d of def.decisions) {
+    checkCondition(d.id, d.availableWhen);
+    if (conditionRefs(d.availableWhen).decisions.some((r) => r.id === d.id)) errors.push(`${d.id}: depende de si mesma`);
+    const optionIds = new Set<string>();
+    for (const o of d.options) {
+      if (optionIds.has(o.id)) errors.push(`${d.id}: opção duplicada ${o.id}`);
+      optionIds.add(o.id);
+      checkEffects(`${d.id}/${o.id}`, o.effects);
+    }
+  }
 
   for (const p of def.puzzles) {
     checkCondition(p.id, p.availableWhen);
@@ -116,6 +138,24 @@ function staticChecks(def: CaseDefinition): ValidationReport {
         errors.push(`${p.id}: answer.pairs precisa ter uma chave para cada item de left`);
       }
       for (const v of Object.values(p.answer.pairs)) if (!options.has(v)) errors.push(`${p.id}: opção inexistente ${v}`);
+    }
+    if (p.type === "contradiction") {
+      const ids = new Set(p.statements.map((st) => st.id));
+      if (ids.size !== p.statements.length) errors.push(`${p.id}: afirmações com id duplicado`);
+      for (const w of p.answer.inconsistent) if (!ids.has(w)) errors.push(`${p.id}: afirmação inexistente ${w}`);
+      for (const role of ROLES) {
+        if (!p.statements.some((st) => st.visibleTo === role)) errors.push(`${p.id}: o papel ${role} não tem afirmações`);
+      }
+    }
+    if (p.type === "mechanism") {
+      for (const step of p.answer.steps) {
+        if (!p.controls[step.role].some((c) => c.id === step.control)) {
+          errors.push(`${p.id}: passo usa comando ${step.control}, que não é do papel ${step.role}`);
+        }
+      }
+      if (!ROLES.every((role) => p.answer.steps.some((st) => st.role === role))) {
+        errors.push(`${p.id}: o mecanismo precisa de passos dos dois papéis`);
+      }
     }
   }
 
@@ -162,6 +202,13 @@ export function simulateSolution(def: CaseDefinition, now = "2026-01-01T00:00:00
           }
         }
       }
+      // Decisões disponíveis: os dois escolhem a primeira opção.
+      for (const d of def.decisions) {
+        if (state.decisions[d.id]?.resolved || !evaluate(d.availableWhen, state)) continue;
+        const option = d.options[0]!.id;
+        if (d.kind === "individual") act(d.role!, { type: "vote_decision", decisionId: d.id, optionId: option });
+        else for (const role of ROLES) act(role, { type: "vote_decision", decisionId: d.id, optionId: option });
+      }
       const open = def.puzzles.filter((p) => puzzleAvailable(p, state) && !(p.id in state.solved));
       if (open.length === 0) break;
       // Justiça: confere as evidências de TODOS os enigmas abertos antes de resolver qualquer um.
@@ -176,10 +223,8 @@ export function simulateSolution(def: CaseDefinition, now = "2026-01-01T00:00:00
         }
       }
       for (const p of open) {
-        const result = act("A", { type: "attempt_puzzle", puzzleId: p.id, answer: solutionOf(p) });
-        if (!(result.outcome.kind === "puzzle" && result.outcome.correct)) {
-          errors.push(`${p.id}: a resposta definida não foi aceita pelo validador de respostas`);
-        }
+        for (const step of solutionActions(p)) act(step.role, step.action);
+        if (!(p.id in state.solved)) errors.push(`${p.id}: a resposta definida não foi aceita pelo validador de respostas`);
       }
     }
 

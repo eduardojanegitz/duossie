@@ -19,7 +19,7 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 | 1 — Fundação (setup, banco, auth, dupla) | ✅ implementada e testada |
 | 2 — Interface principal (central, catálogo, dossiês, presença) | ✅ implementada e testada |
 | 3 — Motor de investigação + Caso 001 jogável | ✅ implementada e testada (texto; sem áudio/arte final) |
-| 4 — Cooperação | pendente |
+| 4 — Cooperação (quadro, chat, decisões, novos enigmas) | ✅ implementada e testada |
 | 5 — Caso 001 completo | pendente |
 | 6 — Polimento e deploy | pendente |
 
@@ -72,6 +72,8 @@ docs/             decisões e plano
 | `case_sessions` | dupla lê metadados (status, progresso); **não** a coluna `state` | uma por caso por dupla; snapshot + `state_version` |
 | `session_players` | dupla | papel A/B de cada jogador |
 | `session_actions`, `session_events` | **nenhum** | idempotência (`action_id`) e log append-only |
+| `board_items`, `board_links` | **nenhum** (via servidor) | quadro: evidências fixadas, anotações, grupos, status, conexões |
+| `session_messages`, `session_reads` | **nenhum** (via servidor) | chat da investigação, pedidos de ajuda, não lidas |
 
 Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. Todas validam
 `auth.uid()` e rodam como `SECURITY DEFINER` com `search_path` vazio. Só para o servidor
@@ -80,7 +82,8 @@ Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. 
 ## Como a investigação funciona
 
 1. O cliente envia uma ação (`view_evidence`, `share_evidence`, `attempt_puzzle`, `request_hint`,
-   `propose_theory`, `confirm_theory`, `withdraw_theory`, `reopen_theory`) com um `actionId` UUID.
+   `operate_mechanism`, `vote_decision`, `propose_theory`, `confirm_theory`, `withdraw_theory`,
+   `reopen_theory`) com um `actionId` UUID.
 2. A Server Action confere a sessão, a dupla e o papel do jogador, roda o motor (`reduce`) e chama
    `commit_session_transition`, que, numa transação: registra a ação (idempotência), grava o novo
    snapshot só se a versão não mudou (concorrência otimista; em conflito o servidor tenta de novo),
@@ -88,7 +91,11 @@ Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. 
 3. Cada navegador, ao receber o sinal (ou ao reconectar/voltar à aba), pede ao servidor a **própria
    projeção** (`projectView`): só as evidências do seu papel, as compartilhadas com ele, os enunciados
    do seu lado e as dicas que pediu. Respostas e gabarito nunca saem do servidor antes do fim.
-4. O relatório final é conjunto: um propõe, o outro confirma ou devolve. O veredito
+4. Quadro e chat ficam fora do motor (não são regras do jogo), mas seguem a mesma privacidade:
+   o servidor monta a visão de cada um. Um cartão ou anexo de evidência que o leitor não tem aparece
+   **tarjado** (sem id, título ou conteúdo); itens privados só existem para o autor. Cada mudança
+   dispara um sinal sem conteúdo (`board_updated`, `message_created`) no canal da dupla.
+5. O relatório final é conjunto: um propõe, o outro confirma ou devolve. O veredito
    (`closed`/`partial`/`archived`) não depende de tempo. Abaixo de 100 pontos, dá para reabrir.
 
 ## Fluxo de entrada

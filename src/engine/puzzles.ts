@@ -1,11 +1,12 @@
 import { z } from "zod";
-import type { Puzzle } from "./schema";
+import type { Puzzle, Role } from "./schema";
 
 /** Formato da resposta enviada pelo cliente, por tipo de enigma. */
 export const puzzleAnswerSchema = z.union([
   z.object({ code: z.string().max(64) }).strict(),
   z.object({ order: z.array(z.string().max(30)).max(30) }).strict(),
   z.object({ pairs: z.record(z.string().max(30), z.string().max(30)) }).strict(),
+  z.object({ flags: z.array(z.string().max(30)).max(30) }).strict(),
 ]);
 export type PuzzleAnswer = z.infer<typeof puzzleAnswerSchema>;
 
@@ -48,10 +49,14 @@ export function checkAnswer(puzzle: Puzzle, answer: PuzzleAnswer): CheckResult {
       const partial = left.filter((l) => answer.pairs[l] === puzzle.answer.pairs[l]).length;
       return { valid: true, correct: partial === left.length, partial };
     }
+    // Avaliados no reducer: dependem das duas partes ou de vários passos.
+    case "contradiction":
+    case "mechanism":
+      return { valid: false };
   }
 }
 
-/** Resposta correta no formato do cliente (usada pelo simulador e testes). */
+/** Resposta correta no formato do cliente (enigmas resolvidos com uma única tentativa). */
 export function solutionOf(puzzle: Puzzle): PuzzleAnswer {
   switch (puzzle.type) {
     case "code":
@@ -60,5 +65,35 @@ export function solutionOf(puzzle: Puzzle): PuzzleAnswer {
       return { order: [...puzzle.answer.order] };
     case "match":
       return { pairs: { ...puzzle.answer.pairs } };
+    case "contradiction":
+      return { flags: [...puzzle.answer.inconsistent] };
+    case "mechanism":
+      throw new Error("mecanismo não tem resposta única; use solutionActions");
   }
+}
+
+export type SolutionStep =
+  | { role: Role; action: { type: "attempt_puzzle"; puzzleId: string; answer: PuzzleAnswer } }
+  | { role: Role; action: { type: "operate_mechanism"; puzzleId: string; control: string } };
+
+/** Ações (por papel) que resolvem o enigma — usado pelo simulador e por testes. */
+export function solutionActions(puzzle: Puzzle): SolutionStep[] {
+  if (puzzle.type === "contradiction") {
+    const wrong = new Set(puzzle.answer.inconsistent);
+    return (["A", "B"] as const).map((role) => ({
+      role,
+      action: {
+        type: "attempt_puzzle" as const,
+        puzzleId: puzzle.id,
+        answer: { flags: puzzle.statements.filter((st) => st.visibleTo === role && wrong.has(st.id)).map((st) => st.id) },
+      },
+    }));
+  }
+  if (puzzle.type === "mechanism") {
+    return puzzle.answer.steps.map((step) => ({
+      role: step.role,
+      action: { type: "operate_mechanism" as const, puzzleId: puzzle.id, control: step.control },
+    }));
+  }
+  return [{ role: "A", action: { type: "attempt_puzzle", puzzleId: puzzle.id, answer: solutionOf(puzzle) } }];
 }

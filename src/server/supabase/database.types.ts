@@ -23,7 +23,71 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "case_sessions": {
+            "board_items": {
+                  Row: {
+                    "author_id": string,"body": string | null,"created_at": string,"evidence_id": string | null,"group_label": string | null,"highlight": boolean,"id": string,"kind": Database["public"]['Enums']["board_item_kind"],"session_id": string,"status": Database["public"]['Enums']["board_status"],"updated_at": string,"visibility": Database["public"]['Enums']["board_visibility"],"x": number,"y": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"body"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"group_label"?: string | null,"highlight"?: boolean,"id"?: string,"kind": Database["public"]['Enums']["board_item_kind"],"session_id": string,"status"?: Database["public"]['Enums']["board_status"],"updated_at"?: string,"visibility"?: Database["public"]['Enums']["board_visibility"],"x"?: number,"y"?: number
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"group_label"?: string | null,"highlight"?: boolean,"id"?: string,"kind"?: Database["public"]['Enums']["board_item_kind"],"session_id"?: string,"status"?: Database["public"]['Enums']["board_status"],"updated_at"?: string,"visibility"?: Database["public"]['Enums']["board_visibility"],"x"?: number,"y"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "board_items_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "board_items_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"board_links": {
+                  Row: {
+                    "author_id": string,"created_at": string,"from_item": string,"id": string,"label": string | null,"session_id": string,"status": Database["public"]['Enums']["board_status"],"to_item": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"created_at"?: string,"from_item": string,"id"?: string,"label"?: string | null,"session_id": string,"status"?: Database["public"]['Enums']["board_status"],"to_item": string
+                  }
+                  Update: {
+                    "author_id"?: string,"created_at"?: string,"from_item"?: string,"id"?: string,"label"?: string | null,"session_id"?: string,"status"?: Database["public"]['Enums']["board_status"],"to_item"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "board_links_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "board_links_from_item_fkey"
+      columns: ["from_item"]
+isOneToOne: false
+      referencedRelation: "board_items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "board_links_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "board_links_to_item_fkey"
+      columns: ["to_item"]
+isOneToOne: false
+      referencedRelation: "board_items"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"case_sessions": {
                   Row: {
                     "case_id": string,"case_version_id": string,"completed_at": string | null,"duo_id": string,"id": string,"progress": number,"started_at": string,"started_by": string | null,"state": NonNullable<Json>,"state_version": number,"status": Database["public"]['Enums']["session_status"],"updated_at": string
                   }
@@ -259,6 +323,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"session_messages": {
+                  Row: {
+                    "author_id": string,"body": string | null,"created_at": string,"evidence_id": string | null,"id": string,"kind": string,"puzzle_id": string | null,"session_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"body"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"id"?: string,"kind": string,"puzzle_id"?: string | null,"session_id": string
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"id"?: string,"kind"?: string,"puzzle_id"?: string | null,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_messages_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_messages_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"session_players": {
                   Row: {
                     "role": Database["public"]['Enums']["player_role"],"session_id": string,"user_id": string
@@ -279,6 +369,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     },{
       foreignKeyName: "session_players_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"session_reads": {
+                  Row: {
+                    "last_read_at": string,"session_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "last_read_at"?: string,"session_id": string,"user_id": string
+                  }
+                  Update: {
+                    "last_read_at"?: string,"session_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_reads_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_reads_user_id_fkey"
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
@@ -310,10 +426,13 @@ isOneToOne: false
                            },
 "join_duo":
 { Args: { "p_code": string }; Returns: string
+                           },
+"notify_duo":
+{ Args: { "p_duo_id": string,"p_event": string,"p_payload": Json }; Returns: undefined
                            }
           }
           Enums: {
-            "case_difficulty": "easy"|"medium"|"hard","player_role": "A"|"B","session_status": "active"|"completed"
+            "board_item_kind": "evidence"|"note","board_status": "hypothesis"|"confirmed"|"contradiction","board_visibility": "private"|"shared","case_difficulty": "easy"|"medium"|"hard","player_role": "A"|"B","session_status": "active"|"completed"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -433,7 +552,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "case_difficulty": ["easy", "medium", "hard"],"player_role": ["A", "B"],"session_status": ["active", "completed"]
+            "board_item_kind": ["evidence", "note"],"board_status": ["hypothesis", "confirmed", "contradiction"],"board_visibility": ["private", "shared"],"case_difficulty": ["easy", "medium", "hard"],"player_role": ["A", "B"],"session_status": ["active", "completed"]
           }
         }
 } as const

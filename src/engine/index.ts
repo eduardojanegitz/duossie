@@ -6,9 +6,9 @@
 export * from "./schema";
 export * from "./state";
 export { evaluate } from "./conditions";
-export { checkAnswer, normalizeCode, puzzleAnswerSchema, type PuzzleAnswer } from "./puzzles";
+export { checkAnswer, normalizeCode, puzzleAnswerSchema, solutionActions, type PuzzleAnswer } from "./puzzles";
 export { gameActionSchema, reduce, type ActionError, type ActionOutcome, type GameAction, type ReduceResult } from "./reducer";
-export { projectView, type EvidenceView, type FeedView, type PlayerView, type PuzzleView, type TheoryView } from "./projection";
+export { projectView, type DecisionView, type EvidenceView, type FeedView, type PlayerView, type PuzzleView, type TheoryView } from "./projection";
 export { progressOf } from "./availability";
 export { scoreQuestion, gradeTheory } from "./theory";
 export { simulateSolution, validateCase, type ValidationReport } from "./validator";

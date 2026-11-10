@@ -1,6 +1,7 @@
 import { evidenceAccessible, isSharedWith, progressOf, puzzleAvailable, theoryAvailable } from "./availability";
+import { evaluate } from "./conditions";
 import type { Block, CaseDefinition, Role } from "./schema";
-import { otherRole, type FeedEntry, type SessionState, type TheoryAnswers, type VerdictRecord } from "./state";
+import { normalizeState, otherRole, type FeedEntry, type SessionState, type TheoryAnswers, type VerdictRecord } from "./state";
 
 /**
  * Tudo que um jogador pode saber, e nada além disso.
@@ -19,6 +20,7 @@ export type PlayerView = {
   chapters: { id: string; title: string; intro: string }[];
   evidence: EvidenceView[];
   puzzles: PuzzleView[];
+  decisions: DecisionView[];
   feed: FeedView[];
   theory: TheoryView;
 };
@@ -53,7 +55,27 @@ export type PuzzleView = PuzzleBaseView &
     | { type: "code"; inputLabel: string }
     | { type: "sequence"; items: { id: string; label: string }[]; solution: string[] | null }
     | { type: "match"; left: { id: string; label: string }[]; options: { id: string; label: string }[]; solution: Record<string, string> | null }
+    | {
+        type: "contradiction";
+        /** Só as afirmações do próprio papel. */
+        statements: { id: string; source: string; label: string; inconsistent: boolean | null }[];
+        myPart: string[] | null;
+        partnerSubmitted: boolean;
+      }
+    | { type: "mechanism"; controls: { id: string; label: string }[]; progress: number; total: number }
   );
+
+export type DecisionView = {
+  id: string;
+  kind: "individual" | "joint";
+  title: string;
+  prompt: string;
+  options: { id: string; label: string }[];
+  myVote: string | null;
+  /** Só em decisões conjuntas: o voto do parceiro fica visível para a discussão. */
+  partnerVote: string | null;
+  resolved: { optionId: string; outcome: string } | null;
+};
 
 export type FeedView = Omit<FeedEntry, "to"> & { label: string };
 
@@ -78,7 +100,8 @@ export type TheoryView =
       } | null;
     };
 
-export function projectView(def: CaseDefinition, state: SessionState, role: Role): PlayerView {
+export function projectView(def: CaseDefinition, rawState: SessionState, role: Role): PlayerView {
+  const state = normalizeState(rawState);
   const chapterIndex = def.chapters.findIndex((c) => c.id === state.chapter);
   const chapter = def.chapters[chapterIndex] ?? def.chapters[0]!;
 
@@ -119,13 +142,53 @@ export function projectView(def: CaseDefinition, state: SessionState, role: Role
       if (p.type === "sequence") {
         return { ...base, type: "sequence", items: p.items, solution: solved ? p.answer.order : null };
       }
-      return { ...base, type: "match", left: p.left, options: p.options, solution: solved ? p.answer.pairs : null };
+      if (p.type === "match") {
+        return { ...base, type: "match", left: p.left, options: p.options, solution: solved ? p.answer.pairs : null };
+      }
+      if (p.type === "contradiction") {
+        const wrong = new Set(p.answer.inconsistent);
+        const parts = state.parts[p.id] ?? {};
+        return {
+          ...base,
+          type: "contradiction",
+          statements: p.statements
+            .filter((st) => st.visibleTo === role)
+            .map((st) => ({ id: st.id, source: st.source, label: st.label, inconsistent: solved ? wrong.has(st.id) : null })),
+          myPart: parts[role] ?? null,
+          partnerSubmitted: Boolean(parts[otherRole(role)]),
+        };
+      }
+      return {
+        ...base,
+        type: "mechanism",
+        controls: p.controls[role],
+        progress: solved ? p.answer.steps.length : (state.mechanisms[p.id] ?? 0),
+        total: p.answer.steps.length,
+      };
+    });
+
+  const decisions: DecisionView[] = def.decisions
+    .filter((d) => (d.kind === "joint" || d.role === role) && (evaluate(d.availableWhen, state) || state.decisions[d.id]?.resolved))
+    .map((d) => {
+      const record = state.decisions[d.id];
+      const resolvedOption = record?.resolved ? d.options.find((o) => o.id === record.resolved) : undefined;
+      return {
+        id: d.id,
+        kind: d.kind,
+        title: d.title,
+        prompt: d.prompt,
+        options: d.options.map((o) => ({ id: o.id, label: o.label })),
+        myVote: record?.votes[role] ?? null,
+        partnerVote: d.kind === "joint" ? (record?.votes[otherRole(role)] ?? null) : null,
+        resolved: resolvedOption ? { optionId: resolvedOption.id, outcome: resolvedOption.outcome } : null,
+      };
     });
 
   const titles = new Map<string, string>([
     ...def.evidence.map((e) => [e.id, e.title] as const),
     ...def.puzzles.map((p) => [p.id, p.title] as const),
     ...def.chapters.map((c) => [c.id, c.title] as const),
+    ...def.decisions.map((d) => [d.id, d.title] as const),
   ]);
 
   const feed: FeedView[] = state.feed
@@ -145,6 +208,7 @@ export function projectView(def: CaseDefinition, state: SessionState, role: Role
     chapters: def.chapters.filter((c) => state.chaptersReached.includes(c.id)),
     evidence,
     puzzles,
+    decisions,
     feed,
     theory: projectTheory(def, state, role),
   };
@@ -159,6 +223,12 @@ function feedLabel(f: Omit<FeedEntry, "to">, titles: Map<string, string>, role: 
       return `${who} compartilhou: ${titles.get(f.ref ?? "") ?? "evidência"}`;
     case "solved":
       return `${who} resolveu: ${titles.get(f.ref ?? "") ?? "enigma"}`;
+    case "puzzle":
+      return f.by === undefined ? (f.text ?? "") : `${who} ${f.text ?? ""} em: ${titles.get(f.ref ?? "") ?? "enigma"}`;
+    case "decision":
+      return f.by === undefined
+        ? `${titles.get(f.ref ?? "") ?? "Decisão"}: ${f.text ?? ""}`
+        : `${who} ${f.text ?? ""} em: ${titles.get(f.ref ?? "") ?? "decisão"}`;
     case "theory":
     case "notice":
       return f.text ?? "";

@@ -1,19 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, CheckCircle2, Lightbulb } from "lucide-react";
-import type { PlayerView, PuzzleAnswer, PuzzleView } from "@/engine";
+import { ArrowDown, ArrowUp, CheckCircle2, LifeBuoy, Lightbulb, Lock } from "lucide-react";
+import type { DecisionView, PlayerView, PuzzleAnswer, PuzzleView } from "@/engine";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { useCollab } from "./use-collab";
 import { useGameAction, type DispatchResult } from "./use-game-action";
 
 type View = PlayerView & { sessionId: string };
 
 export function PuzzlesPanel({ view, partnerName }: { view: View; partnerName: string }) {
-  if (view.puzzles.length === 0) {
-    return <p className="text-paper-500">Nenhum enigma disponível ainda. Examinem os arquivos.</p>;
-  }
   const ordered = [...view.puzzles].sort((a, b) => Number(a.solved) - Number(b.solved));
+  const decisions = [...view.decisions].sort((a, b) => Number(a.resolved !== null) - Number(b.resolved !== null));
+  return (
+    <div className="flex flex-col gap-10">
+      {decisions.length > 0 ? (
+        <section aria-labelledby="decisions-title" className="flex flex-col gap-4">
+          <h2 id="decisions-title" className="font-mono text-xs uppercase tracking-[0.25em] text-paper-500">
+            Decisões
+          </h2>
+          {decisions.map((d) => (
+            <DecisionCard key={d.id} decision={d} sessionId={view.sessionId} partnerName={partnerName} />
+          ))}
+        </section>
+      ) : null}
+      {view.puzzles.length === 0 ? <p className="text-paper-500">Nenhum enigma disponível ainda. Examinem os arquivos.</p> : null}
+      {view.puzzles.length > 0 ? <PuzzleList view={view} ordered={ordered} partnerName={partnerName} /> : null}
+    </div>
+  );
+}
+
+function PuzzleList({ view, ordered, partnerName }: { view: View; ordered: PuzzleView[]; partnerName: string }) {
   return (
     <section aria-labelledby="puzzles-title" className="flex flex-col gap-6">
       <h2 id="puzzles-title" className="font-mono text-xs uppercase tracking-[0.25em] text-paper-500">
@@ -40,6 +58,28 @@ function PuzzleCard({ puzzle, sessionId, role, partnerName }: { puzzle: PuzzleVi
           ? ` ${result.outcome.partial} de ${result.outcome.total} estão certos.`
           : "";
       setFeedback({ tone: "info", text: `Ainda não.${partial} Confiram com o parceiro e tentem de novo.` });
+    }
+    if (result.outcome.kind === "part_submitted") {
+      setFeedback({ tone: "info", text: `Suas marcações foram enviadas. Falta ${partnerName} enviar as dele.` });
+    }
+  }
+
+  const collab = useCollab(sessionId);
+  const [helpSent, setHelpSent] = useState(false);
+
+  async function askHelp() {
+    setFeedback(null);
+    const e = await collab.chat({ kind: "help", puzzleId: puzzle.id });
+    if (e) setFeedback({ tone: "error", text: e });
+    else setHelpSent(true);
+  }
+
+  async function operate(control: string) {
+    setFeedback(null);
+    const result = await dispatch({ type: "operate_mechanism", puzzleId: puzzle.id, control });
+    if (!result.ok) return setFeedback({ tone: "error", text: result.error });
+    if (result.outcome.kind === "mechanism" && !result.outcome.ok) {
+      setFeedback({ tone: "info", text: "O mecanismo travou e voltou ao início. Combinem a ordem antes de tentar de novo." });
     }
   }
 
@@ -80,6 +120,10 @@ function PuzzleCard({ puzzle, sessionId, role, partnerName }: { puzzle: PuzzleVi
           {puzzle.type === "code" ? <CodeInput puzzle={puzzle} pending={pending} onSubmit={(code) => submit({ code })} /> : null}
           {puzzle.type === "sequence" ? <SequenceInput puzzle={puzzle} pending={pending} onSubmit={(order) => submit({ order })} /> : null}
           {puzzle.type === "match" ? <MatchInput puzzle={puzzle} pending={pending} onSubmit={(pairs) => submit({ pairs })} /> : null}
+          {puzzle.type === "contradiction" ? (
+            <ContradictionInput puzzle={puzzle} pending={pending} partnerName={partnerName} onSubmit={(flags) => submit({ flags })} />
+          ) : null}
+          {puzzle.type === "mechanism" ? <MechanismInput puzzle={puzzle} pending={pending} onOperate={operate} /> : null}
 
           {feedback ? (
             <p role={feedback.tone === "error" ? "alert" : "status"} className={feedback.tone === "error" ? "text-sm text-stamp-500" : "text-sm text-amber-400"}>
@@ -100,11 +144,16 @@ function PuzzleCard({ puzzle, sessionId, role, partnerName }: { puzzle: PuzzleVi
               ))}
             </ol>
           ) : null}
-          {puzzle.hintsRemaining > 0 ? (
-            <Button variant="quiet" className="self-start px-0" disabled={pending} onClick={hint}>
-              <Lightbulb aria-hidden /> Pedir uma dica ({puzzle.hintsRemaining})
+          <div className="flex flex-wrap gap-x-6">
+            {puzzle.hintsRemaining > 0 ? (
+              <Button variant="quiet" className="px-0" disabled={pending} onClick={hint}>
+                <Lightbulb aria-hidden /> Pedir uma dica ({puzzle.hintsRemaining})
+              </Button>
+            ) : null}
+            <Button variant="quiet" className="px-0" disabled={collab.pending || helpSent} onClick={askHelp}>
+              <LifeBuoy aria-hidden /> {helpSent ? `Pedido enviado a ${partnerName}` : `Chamar ${partnerName}`}
             </Button>
-          ) : null}
+          </div>
         </>
       )}
     </article>
@@ -268,5 +317,163 @@ function MatchInput({
         Testar identificação
       </Button>
     </form>
+  );
+}
+
+function ContradictionInput({
+  puzzle,
+  pending,
+  partnerName,
+  onSubmit,
+}: {
+  puzzle: Extract<PuzzleView, { type: "contradiction" }>;
+  pending: boolean;
+  partnerName: string;
+  onSubmit: (flags: string[]) => void;
+}) {
+  const [flags, setFlags] = useState<string[]>(() => puzzle.myPart ?? []);
+  const toggle = (id: string) => setFlags((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(flags);
+      }}
+    >
+      <p className="text-xs text-paper-500">
+        Marque as afirmações que <strong className="text-paper-300">não se sustentam</strong>. {partnerName} tem outras afirmações; o
+        enigma só é avaliado quando os dois enviarem.
+      </p>
+      {puzzle.statements.map((st) => (
+        <label
+          key={st.id}
+          className={cn(
+            "flex min-h-12 cursor-pointer items-start gap-3 rounded-sm border px-3 py-2 text-sm",
+            flags.includes(st.id) ? "border-stamp-500 bg-ink-800" : "border-ink-600 bg-ink-900",
+          )}
+        >
+          <input type="checkbox" checked={flags.includes(st.id)} onChange={() => toggle(st.id)} className="mt-1 size-4 accent-[var(--stamp-500)]" />
+          <span>
+            <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-paper-500">{st.source}</span>
+            <span className="text-paper-100">“{st.label}”</span>
+          </span>
+        </label>
+      ))}
+      <p className="text-xs text-paper-500" role="status">
+        {puzzle.myPart ? "Você já enviou; pode reenviar até o parceiro mandar as dele." : "Você ainda não enviou."}{" "}
+        {puzzle.partnerSubmitted ? `${partnerName} já enviou.` : `${partnerName} ainda não enviou.`}
+      </p>
+      <Button type="submit" disabled={pending}>
+        Enviar minhas marcações
+      </Button>
+    </form>
+  );
+}
+
+function MechanismInput({
+  puzzle,
+  pending,
+  onOperate,
+}: {
+  puzzle: Extract<PuzzleView, { type: "mechanism" }>;
+  pending: boolean;
+  onOperate: (control: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        className="flex gap-1"
+        role="progressbar"
+        aria-label="Etapas do mecanismo"
+        aria-valuenow={puzzle.progress}
+        aria-valuemin={0}
+        aria-valuemax={puzzle.total}
+      >
+        {Array.from({ length: puzzle.total }, (_, i) => (
+          <span key={i} className={cn("h-2 flex-1 rounded-full", i < puzzle.progress ? "bg-signal-400" : "bg-ink-700")} />
+        ))}
+      </div>
+      <p className="text-xs text-paper-500">
+        {puzzle.progress} de {puzzle.total} etapas. Seus comandos estão abaixo; os do parceiro, no aparelho dele.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {puzzle.controls.map((c) => (
+          <Button key={c.id} variant="outline" disabled={pending} onClick={() => onOperate(c.id)}>
+            {c.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DecisionCard({ decision, sessionId, partnerName }: { decision: DecisionView; sessionId: string; partnerName: string }) {
+  const { dispatch, pending } = useGameAction(sessionId);
+  const [error, setError] = useState<string | null>(null);
+  const label = (id: string | null) => decision.options.find((o) => o.id === id)?.label;
+  const disagree = decision.kind === "joint" && decision.myVote && decision.partnerVote && decision.myVote !== decision.partnerVote;
+
+  return (
+    <article
+      data-testid={`decision-${decision.id}`}
+      aria-labelledby={`${decision.id}-title`}
+      className={cn("flex flex-col gap-3 rounded-sm border p-4", decision.resolved ? "border-ink-600 bg-ink-900" : "border-amber-700 bg-ink-850")}
+    >
+      <header className="flex items-start justify-between gap-3">
+        <h3 id={`${decision.id}-title`} className="text-lg font-medium text-paper-50">
+          {decision.title}
+        </h3>
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-500">
+          {decision.kind === "joint" ? "Decisão conjunta" : "Só você decide"}
+        </span>
+      </header>
+      <p className="text-paper-300">{decision.prompt}</p>
+      {decision.resolved ? (
+        <div className="flex flex-col gap-1 border-l-2 border-amber-500 pl-3">
+          <p className="flex items-center gap-2 text-sm text-paper-500">
+            <Lock aria-hidden className="size-3" /> Escolha: {label(decision.resolved.optionId)}
+          </p>
+          <p className="text-paper-50">{decision.resolved.outcome}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-2" role="group" aria-label="Opções">
+            {decision.options.map((o) => (
+              <Button
+                key={o.id}
+                variant={decision.myVote === o.id ? "default" : "outline"}
+                aria-pressed={decision.myVote === o.id}
+                disabled={pending}
+                onClick={async () => {
+                  setError(null);
+                  const r = await dispatch({ type: "vote_decision", decisionId: decision.id, optionId: o.id });
+                  if (!r.ok) setError(r.error);
+                }}
+              >
+                {o.label}
+                {decision.partnerVote === o.id ? <span className="normal-case tracking-normal"> · voto de {partnerName}</span> : null}
+              </Button>
+            ))}
+          </div>
+          {decision.kind === "joint" ? (
+            <p className="text-sm text-paper-500" role="status">
+              {disagree
+                ? `Vocês escolheram opções diferentes. Conversem — a decisão só vale quando os dois concordarem.`
+                : decision.myVote
+                  ? `Aguardando ${partnerName}.`
+                  : decision.partnerVote
+                    ? `${partnerName} já votou. Sua vez.`
+                    : "Os dois precisam escolher a mesma opção."}
+            </p>
+          ) : null}
+          {error ? (
+            <p role="alert" className="text-sm text-stamp-500">
+              {error}
+            </p>
+          ) : null}
+        </>
+      )}
+    </article>
   );
 }

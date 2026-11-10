@@ -101,3 +101,78 @@ export const miniCaseInput: CaseDefinitionInput = {
 export function miniCase(): CaseDefinition {
   return caseDefinitionSchema.parse(structuredClone(miniCaseInput));
 }
+
+/** Caso sintético com contradições, mecanismo e decisões. */
+export const coopCaseInput: CaseDefinitionInput = {
+  ...structuredClone(miniCaseInput),
+  id: "case-901",
+  events: [],
+  evidence: [
+    ...structuredClone(miniCaseInput.evidence),
+    { id: "ev.relato-a", title: "Relato A", kind: "testimony", visibleTo: "A", summary: "Relato de Ana", body: [{ type: "text", text: "Ana fala." }] },
+    { id: "ev.relato-b", title: "Relato B", kind: "testimony", visibleTo: "B", summary: "Relato de Beto", body: [{ type: "text", text: "Beto fala." }] },
+  ],
+  puzzles: [
+    {
+      id: "pz.mentiras",
+      type: "contradiction",
+      title: "Mentiras",
+      prompt: { A: "Marque as suas.", B: "Marque as suas." },
+      requires: { A: ["ev.relato-a"], B: ["ev.relato-b"] },
+      hints: { A: [{ text: "Compare." }], B: [{ text: "Compare." }] },
+      statements: [
+        { id: "a1", source: "Ana", label: "Estava em casa.", visibleTo: "A" },
+        { id: "a2", source: "Ana", label: "Ouviu o alarme.", visibleTo: "A" },
+        { id: "b1", source: "Beto", label: "Viu Ana na rua.", visibleTo: "B" },
+        { id: "b2", source: "Beto", label: "Chovia.", visibleTo: "B" },
+      ],
+      answer: { inconsistent: ["a1", "b2"] },
+      onSolve: [{ startChapter: "ch.dois" }],
+      solvedText: "As mentiras caíram.",
+    },
+    {
+      id: "pz.eclusa",
+      type: "mechanism",
+      title: "Eclusa",
+      availableWhen: { puzzleSolved: "pz.mentiras" },
+      prompt: { A: "Você tem as válvulas.", B: "Você tem as comportas." },
+      requires: { A: ["ev.ordem"], B: ["ev.valores"] },
+      hints: { A: [{ text: "Alternem." }], B: [{ text: "Alternem." }] },
+      controls: { A: [{ id: "v1", label: "Válvula 1" }, { id: "v2", label: "Válvula 2" }], B: [{ id: "c1", label: "Comporta 1" }] },
+      answer: {
+        steps: [
+          { role: "A", control: "v1" },
+          { role: "B", control: "c1" },
+          { role: "A", control: "v2" },
+        ],
+      },
+      onSolve: [{ setFlag: "fl.eclusa" }],
+      solvedText: "A água baixou.",
+    },
+  ],
+  decisions: [
+    {
+      id: "dc.denunciar",
+      kind: "joint",
+      title: "Denunciar agora?",
+      prompt: "Vocês chamam a polícia agora ou esperam?",
+      availableWhen: { flag: "fl.eclusa" },
+      options: [
+        { id: "agora", label: "Agora", outcome: "A polícia chegou a tempo.", effects: [{ setFlag: "fl.policia" }] },
+        { id: "esperar", label: "Esperar", outcome: "O suspeito fugiu.", effects: [] },
+      ],
+    },
+    {
+      id: "dc.segredo",
+      kind: "individual",
+      role: "B",
+      title: "Guardar a carta?",
+      prompt: "Só você viu a carta.",
+      options: [
+        { id: "guardar", label: "Guardar", outcome: "Você guardou a carta.", effects: [] },
+        { id: "rasgar", label: "Rasgar", outcome: "A carta virou pó.", effects: [] },
+      ],
+    },
+  ],
+  theory: { ...structuredClone(miniCaseInput.theory), availableWhen: { decisionMade: { id: "dc.denunciar" } } },
+};

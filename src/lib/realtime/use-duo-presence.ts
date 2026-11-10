@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 /** O que o jogador está fazendo, compartilhado só com o parceiro. */
-export type Activity = { kind: "central" } | { kind: "case"; caseId: string };
+export type Activity = { kind: "central" } | { kind: "case"; caseId: string; section?: string };
 
 export type PartnerStatus = "connecting" | "offline" | "online" | "away" | "investigating";
 
@@ -22,13 +22,17 @@ export function useDuoPresence(params: {
   activity: Activity;
   /** Sinal do servidor de que uma sessão mudou (não traz conteúdo do jogo). */
   onSessionUpdated?: (payload: { sessionId: string; version: number }) => void;
+  /** Sinal de que o quadro ou o chat de uma sessão mudou. */
+  onCollabUpdated?: (event: "board_updated" | "message_created", payload: { sessionId: string }) => void;
   /** Chamado ao (re)conectar: momento de buscar o estado atual no servidor. */
   onReconnect?: () => void;
 }) {
   const { duoId, userId, partnerId } = params;
   const onSessionUpdated = useRef(params.onSessionUpdated);
   const onReconnect = useRef(params.onReconnect);
+  const onCollabUpdated = useRef(params.onCollabUpdated);
   useEffect(() => {
+    onCollabUpdated.current = params.onCollabUpdated;
     onSessionUpdated.current = params.onSessionUpdated;
     onReconnect.current = params.onReconnect;
   });
@@ -76,6 +80,12 @@ export function useDuoPresence(params: {
         .on("presence", { event: "sync" }, readPartner)
         .on("broadcast", { event: "session_updated" }, (message) => {
           onSessionUpdated.current?.(message.payload as { sessionId: string; version: number });
+        })
+        .on("broadcast", { event: "board_updated" }, (message) => {
+          onCollabUpdated.current?.("board_updated", message.payload as { sessionId: string });
+        })
+        .on("broadcast", { event: "message_created" }, (message) => {
+          onCollabUpdated.current?.("message_created", message.payload as { sessionId: string });
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {

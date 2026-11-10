@@ -51,9 +51,11 @@ async function solve(page: Page, puzzle: Puzzle) {
       }
     }
     await card.getByRole("button", { name: "Testar ordem" }).click();
-  } else {
+  } else if (puzzle.type === "code") {
     await card.getByLabel(puzzle.inputLabel).fill(puzzle.answer.accepted[0]!);
     await card.getByRole("button", { name: "Testar" }).click();
+  } else {
+    throw new Error(`tipo de enigma sem automação no E2E: ${puzzle.type}`);
   }
   await expect(card.getByText("Resolvido", { exact: true })).toBeVisible();
 }

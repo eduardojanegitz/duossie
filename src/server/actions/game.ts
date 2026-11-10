@@ -31,6 +31,11 @@ const GAME_MESSAGES: Record<GameError["code"], string> = {
   own_proposal: "Seu parceiro precisa revisar e confirmar o relatório que você propôs.",
   already_confirmed: "Você já confirmou este relatório.",
   cannot_reopen: "Esta investigação não pode ser reaberta.",
+  not_your_control: "Esse comando está do lado do seu parceiro.",
+  unknown_decision: "Decisão desconhecida.",
+  decision_unavailable: "Esta decisão ainda não está disponível.",
+  decision_resolved: "Esta decisão já foi tomada.",
+  invalid_option: "Opção inválida.",
 };
 
 function gameMessage(error: unknown, context: string): string {
