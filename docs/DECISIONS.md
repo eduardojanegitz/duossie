@@ -26,3 +26,8 @@ Alterar uma decisão = editar esta página e citar o motivo.
 | D19 | Catálogo | Metadados públicos (sem spoiler) de temporadas e casos em `content/seasons/*.yaml`, importados para `seasons`/`cases`. Casos sem definição publicada aparecem como "em preparação", sem botão de iniciar. | Nada de telas falsas. |
 | D20 | Presença | Realtime Presence no canal privado `duo:<id>`, autorizado por RLS em `realtime.messages`. Efêmera: não é fonte de verdade do jogo. | Seção 12 do briefing. |
 | D21 | Abertura | Uma vez por sessão do navegador, ~2,6s, pulável, omitida com `prefers-reduced-motion`. | Seção 18. |
+| D22 | Papéis na investigação | Quem abre a investigação escolhe o papel; o parceiro recebe o outro automaticamente. Uma investigação por caso por dupla. | Simples para duas pessoas; evita sessões duplicadas. |
+| D23 | Tipos de enigma iniciais | `code` (combinação/códigos), `sequence` (cronologia) e `match` (identificação). Contradições e mecanismo de sequência entram na Fase 4. | Os três exigidos pelo MVP, reutilizáveis. |
+| D24 | Retorno de erros em enigmas | Sequência e correspondência informam quantos itens estão certos; tentativas não são limitadas (só rate limit anti-abuso: 30 a cada 5 min). | "Evite limitar tentativas sem necessidade." |
+| D25 | Sincronização | Sinal sem conteúdo via `realtime.send` dentro da transação + refetch da projeção; refetch também ao reconectar, voltar à aba e recuperar a rede. | O WebSocket só acelera; a verdade fica no banco. |
+| D26 | Conteúdo do Caso 001 | Primeira versão em texto (documentos renderizados em HTML). Arte, áudio e quadro de evidências ficam para as Fases 4 e 6. | Validar a diversão antes do polimento. |

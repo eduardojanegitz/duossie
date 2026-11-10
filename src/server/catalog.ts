@@ -19,6 +19,7 @@ export type CaseSummary = {
   status: CaseStatus;
   /** 0–100; `null` enquanto não há investigação iniciada. */
   progress: number | null;
+  sessionId: string | null;
 };
 
 export type SeasonSummary = {
@@ -29,12 +30,20 @@ export type SeasonSummary = {
   cases: CaseSummary[];
 };
 
-/**
- * Progresso da dupla. As sessões de investigação chegam na Fase 3; até lá nenhuma
- * dupla tem casos iniciados ou concluídos, e este é o valor real.
- */
-async function getDuoProgress(): Promise<DuoProgress> {
-  return { completed: new Set(), inProgress: new Set() };
+type DuoSessions = DuoProgress & { progress: Map<string, number>; sessionIds: Map<string, string> };
+
+/** Sessões da dupla (só metadados; o estado do jogo nunca é lido aqui). RLS limita à dupla. */
+async function getDuoProgress(): Promise<DuoSessions> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("case_sessions").select("id, case_id, status, progress");
+  if (error) throw error;
+  const rows = data ?? [];
+  return {
+    completed: new Set(rows.filter((r) => r.status === "completed").map((r) => r.case_id)),
+    inProgress: new Set(rows.filter((r) => r.status === "active").map((r) => r.case_id)),
+    progress: new Map(rows.map((r) => [r.case_id, r.progress])),
+    sessionIds: new Map(rows.map((r) => [r.case_id, r.id])),
+  };
 }
 
 /** Catálogo completo com a situação de cada caso para a dupla do jogador. */
@@ -83,7 +92,8 @@ export const getCatalog = cache(async (): Promise<SeasonSummary[]> => {
             return { id, code: req?.code ?? "???", title: req?.title ?? id };
           }),
           status,
-          progress: null,
+          progress: progress.progress.get(c.id) ?? null,
+          sessionId: progress.sessionIds.get(c.id) ?? null,
         };
       }),
   }));

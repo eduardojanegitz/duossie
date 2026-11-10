@@ -1,25 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { deleteTestUsers, TEST_EMAILS } from "../support/supabase";
-import { waitForOtp } from "../support/mailpit";
+import { login, setCodename } from "./helpers";
 import "../support/load-env";
-
-async function login(page: Page, email: string) {
-  await page.goto("/");
-  await expect(page).toHaveURL(/\/entrar$/);
-  const since = new Date();
-  await page.getByLabel("E-mail do investigador").fill(email);
-  await page.getByRole("button", { name: "Receber código" }).click();
-  const code = await waitForOtp(email, since);
-  await page.getByLabel("Código de acesso").fill(code);
-  await page.getByRole("button", { name: "Entrar" }).click();
-}
-
-async function setCodename(page: Page, codename: string) {
-  await expect(page).toHaveURL(/\/perfil$/);
-  await page.getByLabel("Codinome").fill(codename);
-  await page.getByRole("button", { name: "Confirmar" }).click();
-  await expect(page).toHaveURL(/\/dupla$/);
-}
 
 test.beforeAll(async () => {
   await deleteTestUsers();

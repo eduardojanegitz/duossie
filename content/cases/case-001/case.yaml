@@ -1,0 +1,197 @@
+# ⚠️ SPOILERS — estrutura, gabarito e resolução do Caso 001. Não leia se for jogar.
+# Evidências: evidence.yaml · Enigmas: puzzles.yaml · Roteiro: SPOILERS/roteiro.md
+id: case-001
+version: 1
+title: O Último Trem das 23h47
+
+roles:
+  A:
+    name: Central
+    tagline: Sistemas, registros e dados de terceiros
+    briefing: >-
+      Você está no Centro de Controle Operacional da ferrovia. Tem acesso aos sistemas —
+      bilhetagem, horários, registros técnicos — e aos dados que bancos e empresas enviarem
+      à investigação. Você não vê a plataforma: para isso, depende do seu parceiro.
+  B:
+    name: Campo
+    tagline: Plataforma, objetos e testemunhas
+    briefing: >-
+      Você está na plataforma de Ferreira Lago, ao lado do trem. Tem a mala, os objetos, as
+      câmeras e as pessoas que estavam a bordo. Você não acessa os sistemas: para isso,
+      depende do seu parceiro.
+
+intro: >-
+  Quinta-feira, 09 de outubro. O Expresso Noturno 117 chega a Ferreira Lago às 23h47, com
+  cinco minutos de atraso. O sistema registra 12 passageiros embarcados em Serra Alta.
+  As câmeras da plataforma mostram 11 desembarcando. A vistoria garante que ninguém ficou a bordo.
+  No carro 3, poltrona 24, alguém deixou uma mala vermelha. Dentro dela, um bilhete.
+
+chapters:
+  - id: ch.chegada
+    title: A chegada
+    intro: Doze embarcaram, onze desceram. Comecem pelo que cada um tem em mãos.
+  - id: ch.trajeto
+    title: O trajeto
+    intro: Os registros da viagem e os depoimentos dos passageiros do carro 3 chegaram.
+  - id: ch.serra-alta
+    title: Serra Alta
+    intro: A investigação volta para a cidade de onde o trem partiu.
+  - id: ch.relatorio
+    title: Relatório
+    intro: Vocês têm o suficiente para explicar o que aconteceu. Montem o relatório final juntos.
+
+events:
+  - id: evt.sinistro
+    when: { chapterReached: ch.serra-alta }
+    effects:
+      - notify:
+          to: A
+          text: A seguradora Amparo Vida respondeu ao pedido de informações sobre Rafael Moura.
+
+theory:
+  availableWhen: { puzzleSolved: pz.armario }
+  intro: >-
+    Um de vocês propõe o relatório; o outro revisa e confirma. Só os dois juntos enviam.
+    Não há limite de tempo — o que conta é explicar o caso.
+  questions:
+    - id: q.passageiro
+      prompt: O que aconteceu com Rafael Moura, o passageiro da poltrona 24?
+      kind: single
+      options:
+        - { id: ponte, label: Caiu ou saltou do trem na Ponte do Sabiá. }
+        - { id: desembarcou, label: Desembarcou em Ferreira Lago sem ser filmado. }
+        - { id: nunca, label: Nunca embarcou — validou o bilhete e ficou em Serra Alta. }
+        - { id: sequestro, label: Foi retirado do trem à força. }
+      correct: [nunca]
+      explanation: >-
+        As câmeras mostram onze pessoas, e todas são passageiros identificados; o chefe de trem
+        contou onze já na partida; a atendente viu a 24 vazia logo depois de Vila Nogueira; e o
+        cartão de Rafael foi usado em Serra Alta às 22h04.
+    - id: q.mala
+      prompt: Quem levou a mala vermelha até a poltrona 24?
+      kind: single
+      options:
+        - { id: rafael, label: Rafael Moura }
+        - { id: clara, label: Clara Vidal }
+        - { id: jonas, label: Jonas Ferraz }
+        - { id: aurelio, label: Aurélio Santos }
+        - { id: tomas, label: Tomás Moura }
+      correct: [clara]
+      explanation: >-
+        Clara tinha "1 volume de mão" no manifesto e desceu sem nada (C7). Jonas a viu com a mala
+        no colo; Rosa, com a mala aos pés. A pulseira de contas verdes da foto é a dela.
+    - id: q.bilhete
+      prompt: Quem escreveu o bilhete?
+      kind: single
+      options:
+        - { id: clara, label: Clara Vidal }
+        - { id: rafael, label: Rafael Moura }
+        - { id: tomas, label: Tomás Moura }
+        - { id: aurelio, label: Aurélio Santos }
+        - { id: jonas, label: Jonas Ferraz }
+      correct: [clara]
+      explanation: >-
+        A caligrafia do bilhete (letra inclinada, "q" com laço fechado, acentos longos) é a mesma
+        do formulário de ocorrência de Clara. E foi escrito no bloco onde Rafael anotou a senha
+        do armário para ela.
+    - id: q.motivo
+      prompt: Qual era o objetivo do plano?
+      kind: single
+      options:
+        - { id: seguro, label: Forjar a morte de Rafael para o irmão receber o seguro e ele sumir das dívidas. }
+        - { id: incriminar, label: Incriminar Jonas Ferraz. }
+        - { id: vinganca, label: Vingar-se de Clara Vidal. }
+        - { id: cooperativa, label: Encobrir um desvio na Cooperativa Serrana. }
+      correct: [seguro]
+      explanation: >-
+        Rafael devia R$ 214 mil. A apólice de R$ 1,2 milhão, contratada dois meses antes, paga
+        por morte presumida em acidente de transporte — e o beneficiário, Tomás, abriu o pedido
+        às 07h12 da manhã seguinte.
+    - id: q.cumplices
+      prompt: Além de Rafael, quem participou ou sabia do plano?
+      kind: multiple
+      options:
+        - { id: tomas, label: Tomás Moura }
+        - { id: clara, label: Clara Vidal }
+        - { id: jonas, label: Jonas Ferraz }
+        - { id: aurelio, label: Aurélio Santos }
+        - { id: rosa, label: Rosa Nunes }
+      correct: [tomas, clara]
+      explanation: >-
+        Tomás ligou às 23h52 perguntando pela ponte antes de qualquer ocorrência, e as mensagens
+        confirmam o combinado. Clara executou a encenação, coagida. Jonas tinha ficha, mas foi
+        só testemunha.
+    - id: q.provas
+      prompt: Quais evidências mostram que Rafael não estava no trem?
+      kind: multiple
+      weight: 2
+      options:
+        - { id: farmacia, label: A compra na farmácia de Serra Alta às 22h04. }
+        - { id: armario, label: O armário alugado por "R. M." às 21h50. }
+        - { id: contagem, label: A contagem de onze passageiros na partida. }
+        - { id: poltrona, label: A poltrona 24 vazia logo depois de Vila Nogueira. }
+        - { id: alarme, label: O alarme da porta às 22h19. }
+        - { id: relogio, label: O relógio parado às 22h18. }
+        - { id: ficha, label: A ficha criminal de Jonas Ferraz. }
+      correct: [farmacia, armario, contagem, poltrona]
+      explanation: >-
+        Farmácia e guarda-volumes põem Rafael em Serra Alta com o trem já na serra; contagem e
+        poltrona vazia mostram que ele nunca esteve a bordo. Alarme e relógio foram a encenação.
+    - id: q.engano
+      prompt: O que fez o sistema registrar 12 passageiros a bordo?
+      kind: single
+      options:
+        - { id: catraca, label: "O bilhete de Rafael foi validado na catraca, mas ele não embarcou." }
+        - { id: erro, label: Uma falha no sistema de bilhetagem. }
+        - { id: clandestino, label: Um passageiro clandestino. }
+        - { id: contagem, label: Um erro de contagem do chefe de trem. }
+      correct: [catraca]
+      explanation: >-
+        A catraca registra validações, não embarques — e a plataforma 1 tem passagem livre para
+        a rodoviária. O sistema não errou: contou um bilhete que ninguém usou para viajar.
+    - id: q.relogio
+      prompt: O que o relógio parado em 22h18 realmente indica?
+      kind: single
+      options:
+        - { id: encenado, label: "Foi parado de propósito, na parada da ponte, para sugerir uma queda." }
+        - { id: queda, label: A hora em que Rafael caiu do trem. }
+        - { id: defeito, label: Um defeito sem relação com o caso. }
+        - { id: abertura, label: A hora em que a mala foi aberta. }
+      correct: [encenado]
+      explanation: >-
+        A coroa estava puxada e o vidro intacto: o relógio volta a funcionar ao empurrá-la.
+        Clara o parou às 22h18, um minuto antes de abrir a porta.
+  verdicts:
+    - id: closed
+      minScore: 85
+      title: Caso encerrado
+      text: Vocês reconstruíram o plano inteiro, da catraca ao armário 12.
+    - id: partial
+      minScore: 50
+      title: Parcialmente esclarecido
+      text: O essencial está lá, mas partes do plano ficaram de fora do relatório.
+    - id: archived
+      minScore: 0
+      title: Arquivado
+      text: O relatório não sustenta o que realmente aconteceu. O caso vai para o arquivo — por enquanto.
+
+resolution:
+  summary: >-
+    Rafael Moura nunca embarcou. Validou o bilhete às 20h58 e saiu pela passarela para a
+    rodoviária. Afundado em dívidas, combinou com o irmão, Tomás, forjar uma morte por queda
+    na Ponte do Sabiá: a apólice de R$ 1,2 milhão pagaria por "desaparecimento em acidente de
+    transporte". Coagida, Clara Vidal levou a mala, parou o relógio às 22h18 e abriu a porta
+    às 22h19. Mas foi ela também quem escreveu o bilhete — no mesmo bloco onde Rafael
+    anotara a senha do armário onde deixou o celular, antes de fugir de ônibus como "R. Moreira".
+  overlooked:
+    - O manifesto dava a Clara "1 volume de mão"; as câmeras a mostram descendo sem nada.
+    - Aurélio contou onze pessoas já na partida — e anotou.
+    - A atendente ouviu de Clara que o segundo café era "para o amigo da 24".
+    - A coroa do relógio estava puxada; o vidro, intacto.
+    - Tomás perguntou pela ponte às 23h52, quando ninguém tinha falado em ponte.
+  epilogue: >-
+    Dois dias depois, Rafael Moura foi encontrado numa pensão de Porto Fundo, de cabelo
+    tingido, com a lâmina e a tintura compradas na farmácia da rodoviária. O pedido de
+    indenização foi negado e Tomás responde por tentativa de fraude. Clara se apresentou
+    espontaneamente na manhã seguinte e entregou o bloco de notas. No depoimento, disse
+    apenas: "Eu não ia deixar vocês procurarem um homem no rio."

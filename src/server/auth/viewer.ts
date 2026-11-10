@@ -35,6 +35,9 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     supabase.from("duo_members").select("duo_id").eq("user_id", userId).maybeSingle(),
   ]);
 
+  // Token válido de um usuário que não existe mais (conta removida): trata como sem sessão.
+  if (!profile) return null;
+
   let duo: Viewer["duo"] = null;
   if (membership) {
     const [{ data: duoRow }, { data: members }] = await Promise.all([
@@ -60,7 +63,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   return {
     userId,
     email: typeof claims.email === "string" ? claims.email : null,
-    profile: { id: userId, codename: profile?.codename ?? null },
+    profile: { id: userId, codename: profile.codename },
     duo,
   };
 });

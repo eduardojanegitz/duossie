@@ -23,7 +23,65 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "cases": {
+            "case_sessions": {
+                  Row: {
+                    "case_id": string,"case_version_id": string,"completed_at": string | null,"duo_id": string,"id": string,"progress": number,"started_at": string,"started_by": string | null,"state": NonNullable<Json>,"state_version": number,"status": Database["public"]['Enums']["session_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"case_version_id": string,"completed_at"?: string | null,"duo_id": string,"id"?: string,"progress"?: number,"started_at"?: string,"started_by"?: string | null,"state": NonNullable<Json>,"state_version"?: number,"status"?: Database["public"]['Enums']["session_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "case_id"?: string,"case_version_id"?: string,"completed_at"?: string | null,"duo_id"?: string,"id"?: string,"progress"?: number,"started_at"?: string,"started_by"?: string | null,"state"?: NonNullable<Json>,"state_version"?: number,"status"?: Database["public"]['Enums']["session_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_sessions_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_sessions_case_version_id_fkey"
+      columns: ["case_version_id"]
+isOneToOne: false
+      referencedRelation: "case_versions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_sessions_duo_id_fkey"
+      columns: ["duo_id"]
+isOneToOne: false
+      referencedRelation: "duos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "case_sessions_started_by_fkey"
+      columns: ["started_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"case_versions": {
+                  Row: {
+                    "case_id": string,"content_hash": string,"created_at": string,"definition": NonNullable<Json>,"id": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_id": string,"content_hash": string,"created_at"?: string,"definition": NonNullable<Json>,"id"?: string,"version": number
+                  }
+                  Update: {
+                    "case_id"?: string,"content_hash"?: string,"created_at"?: string,"definition"?: NonNullable<Json>,"id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "case_versions_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "cases"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cases": {
                   Row: {
                     "category": string,"code": string,"cover": string,"created_at": string,"difficulty": Database["public"]['Enums']["case_difficulty"],"duration_max": number | null,"duration_min": number | null,"id": string,"is_playable": boolean,"puzzle_count": number | null,"season_id": string,"sort_order": number,"synopsis": string,"title": string,"unlock_requires": (string)[],"updated_at": string
                   }
@@ -149,13 +207,97 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"session_actions": {
+                  Row: {
+                    "action": NonNullable<Json>,"action_id": string,"actor_id": string,"created_at": string,"outcome": NonNullable<Json>,"session_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": NonNullable<Json>,"action_id": string,"actor_id": string,"created_at"?: string,"outcome": NonNullable<Json>,"session_id": string
+                  }
+                  Update: {
+                    "action"?: NonNullable<Json>,"action_id"?: string,"actor_id"?: string,"created_at"?: string,"outcome"?: NonNullable<Json>,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_actions_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_actions_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"session_events": {
+                  Row: {
+                    "action_id": string | null,"actor_id": string | null,"created_at": string,"payload": NonNullable<Json>,"session_id": string,"state_version": number,"type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action_id"?: string | null,"actor_id"?: string | null,"created_at"?: string,"payload"?: NonNullable<Json>,"session_id": string,"state_version": number,"type": string
+                  }
+                  Update: {
+                    "action_id"?: string | null,"actor_id"?: string | null,"created_at"?: string,"payload"?: NonNullable<Json>,"session_id"?: string,"state_version"?: number,"type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_events_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_events_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"session_players": {
+                  Row: {
+                    "role": Database["public"]['Enums']["player_role"],"session_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "role": Database["public"]['Enums']["player_role"],"session_id": string,"user_id": string
+                  }
+                  Update: {
+                    "role"?: Database["public"]['Enums']["player_role"],"session_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_players_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "case_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_players_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "create_duo":
+            "commit_session_transition":
+{ Args: { "p_action": Json,"p_action_id": string,"p_actor_id": string,"p_event_payload": Json,"p_event_type": string,"p_expected_version": number,"p_outcome": Json,"p_progress": number,"p_session_id": string,"p_state": Json,"p_status": Database["public"]['Enums']["session_status"] }; Returns: string
+                           },
+"consume_rate_limit":
+{ Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"create_duo":
 { Args: { "p_name": string }; Returns: string
                            },
 "create_duo_invite":
@@ -171,7 +313,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "case_difficulty": "easy"|"medium"|"hard"
+            "case_difficulty": "easy"|"medium"|"hard","player_role": "A"|"B","session_status": "active"|"completed"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -291,7 +433,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "case_difficulty": ["easy", "medium", "hard"]
+            "case_difficulty": ["easy", "medium", "hard"],"player_role": ["A", "B"],"session_status": ["active", "completed"]
           }
         }
 } as const

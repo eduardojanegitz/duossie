@@ -1,0 +1,432 @@
+# ⚠️ SPOILERS — evidências do Caso 001. Não leia se for jogar.
+# visibleTo: A (Central) | B (Campo) | both · share: full (pode enviar ao parceiro) | none
+
+# ---------------------------------------------------------------------------
+# Comuns
+# ---------------------------------------------------------------------------
+- id: ev.bilhete
+  title: O bilhete da mala
+  kind: object
+  visibleTo: both
+  summary: Papel pautado dobrado em quatro, encontrado dentro da mala.
+  body:
+    - type: handwriting
+      text: Não procure quem desapareceu. Descubra quem nunca embarcou.
+      note: Caneta azul. Sem assinatura.
+    - type: text
+      text: Folha arrancada de um bloco pautado pequeno. Estava dobrada entre as camisas, no fundo da mala.
+
+# ---------------------------------------------------------------------------
+# A — Central (capítulo 1)
+# ---------------------------------------------------------------------------
+- id: ev.manifesto
+  title: Manifesto de bilhetagem — Trem 117
+  kind: record
+  visibleTo: A
+  summary: Os 12 bilhetes validados para o Expresso Noturno 117.
+  body:
+    - type: fields
+      items:
+        - { label: Trem, value: "117 — Expresso Noturno (Serra Alta → Ferreira Lago)" }
+        - { label: Data, value: "09/10" }
+        - { label: Bilhetes validados, value: "12" }
+    - type: table
+      columns: [Nome, Idade, Poltrona, Observações]
+      rows:
+        - ["Lurdes Pacheco", "78", "C1-05", "Mobilidade reduzida (bengala). Embarque assistido."]
+        - ["Hideo Tanaka", "70", "C1-02", "Bicicleta dobrável no bagageiro especial."]
+        - ["Marta Rocha", "34", "C2-07", "Acompanha menor (Davi)."]
+        - ["Davi Rocha", "6", "C2-08", "Menor acompanhado."]
+        - ["Paulo Ventura", "51", "C2-11", "—"]
+        - ["Noêmia Duarte", "60", "C2-27", "1 mala de rodinhas."]
+        - ["Beatriz Lemos", "22", "C2-14", "Instrumento musical (violoncelo) a bordo."]
+        - ["Sérgio Antunes", "40", "C3-16", "—"]
+        - ["Jonas Ferraz", "29", "C3-19", "Bagagem de mão: 2 volumes."]
+        - ["Rafael Moura", "42", "C3-24", "—"]
+        - ["Clara Vidal", "35", "C3-23", "Bagagem de mão: 1 volume."]
+        - ["Caio Prates", "19", "C3-30", "—"]
+    - type: text
+      text: "Poltrona: C3-24 = carro 3, poltrona 24."
+
+- id: ev.catracas
+  title: Registro das catracas — Estação Serra Alta
+  kind: record
+  visibleTo: A
+  summary: Horário em que cada bilhete do trem 117 foi validado.
+  body:
+    - type: table
+      caption: Catraca 2 — acesso à plataforma 1
+      columns: [Hora, Bilhete]
+      rows:
+        - ["20h41", "Lurdes Pacheco (validado pelo funcionário do embarque assistido)"]
+        - ["20h44", "Hideo Tanaka"]
+        - ["20h47", "Marta Rocha"]
+        - ["20h47", "Davi Rocha"]
+        - ["20h50", "Paulo Ventura"]
+        - ["20h52", "Noêmia Duarte"]
+        - ["20h53", "Beatriz Lemos"]
+        - ["20h55", "Sérgio Antunes"]
+        - ["20h56", "Jonas Ferraz"]
+        - ["20h58", "Rafael Moura"]
+        - ["20h59", "Clara Vidal"]
+        - ["21h03", "Caio Prates"]
+    - type: text
+      text: "Nota do sistema: a catraca registra a validação do bilhete. A plataforma 1 também se liga, por passarela de fluxo livre, à Rodoviária de Serra Alta."
+
+- id: ev.horario
+  title: Horário operacional — Trem 117
+  kind: record
+  visibleTo: A
+  summary: Registro de marcha do trem na noite de 09/10.
+  body:
+    - type: table
+      columns: [Hora, Ponto, Ocorrência]
+      rows:
+        - ["21h05", "Serra Alta", "Partida"]
+        - ["21h38", "Vila Nogueira", "Passagem sem parada"]
+        - ["22h16", "Ponte do Sabiá", "Parada não programada (sinal fechado)"]
+        - ["22h20", "Ponte do Sabiá", "Retomada"]
+        - ["23h47", "Ferreira Lago", "Chegada (+5 min)"]
+
+# ---------------------------------------------------------------------------
+# B — Campo (capítulo 1)
+# ---------------------------------------------------------------------------
+- id: ev.cameras
+  title: Câmeras da plataforma — desembarque
+  kind: record
+  visibleTo: B
+  summary: Todas as pessoas que deixaram o trem 117 em Ferreira Lago.
+  body:
+    - type: fields
+      items:
+        - { label: Operadora, value: "Inês Ramos (segurança da estação)" }
+        - { label: Cobertura, value: "Duas câmeras cobrem as seis portas do trem e a única saída da plataforma." }
+        - { label: Vistoria, value: "23h58 — nenhum passageiro a bordo. Mala encontrada no carro 3, poltrona 24." }
+    - type: table
+      columns: [Registro, Hora, Descrição]
+      rows:
+        - ["C1", "23h48", "Homem idoso, cabelos brancos, carrega uma bicicleta dobrável."]
+        - ["C2", "23h48", "Moça de uns 20 anos com um estojo grande de violoncelo nas costas."]
+        - ["C3", "23h49", "Homem jovem, boné, duas mochilas (uma nas costas, outra na mão)."]
+        - ["C4", "23h49", "Mulher de uns 35 anos conduzindo uma criança pela mão."]
+        - ["C5", "23h49", "Criança de uns 6 anos, de mãos dadas com a mulher de C4."]
+        - ["C6", "23h50", "Homem de terno, uns 50 anos, maleta executiva."]
+        - ["C7", "23h50", "Mulher de uns 35 anos, cabelo preso, sem bagagem. Pulseira de contas verdes no pulso direito."]
+        - ["C8", "23h50", "Homem de jaqueta, uns 40 anos, sem bagagem."]
+        - ["C9", "23h51", "Senhora de cabelos grisalhos puxando uma mala de rodinhas."]
+        - ["C10", "23h52", "Senhora idosa com bengala, acompanhada por um funcionário."]
+        - ["C11", "23h52", "Rapaz de fone de ouvido, mochila pequena."]
+
+- id: ev.mala
+  title: Inventário da mala da poltrona 24
+  kind: object
+  visibleTo: B
+  share: full
+  summary: Tudo o que havia na mala vermelha encontrada no carro 3.
+  body:
+    - type: fields
+      items:
+        - { label: Objeto, value: "Mala de mão vermelha, sem etiqueta de identificação" }
+        - { label: Local, value: "Carro 3, poltrona 24" }
+    - type: list
+      items:
+        - Relógio de pulso masculino, parado.
+        - Metade de uma fotografia, rasgada à mão.
+        - O bilhete manuscrito.
+        - Duas camisas dobradas, com as etiquetas da loja ainda presas.
+        - Nécessaire vazia.
+    - type: text
+      text: "Não havia documentos, passagem, carteira, remédios, carregador ou celular."
+
+- id: ev.relogio
+  title: Perícia do relógio
+  kind: object
+  visibleTo: B
+  summary: O relógio parado encontrado na mala.
+  body:
+    - type: fields
+      items:
+        - { label: Ponteiros, value: "22h18" }
+        - { label: Coroa, value: "Puxada (posição de acerto). Ao empurrá-la, o relógio volta a funcionar normalmente." }
+        - { label: Vidro, value: "Intacto, sem arranhões" }
+        - { label: Verso, value: "Gravado: \"R.M. — 15 anos de Cooperativa Serrana\"" }
+
+- id: ev.foto
+  title: Fotografia rasgada
+  kind: photo
+  visibleTo: B
+  share: full
+  summary: Metade direita de uma foto de festa.
+  body:
+    - type: text
+      text: Metade direita de uma fotografia, rasgada à mão. Um homem de uns 40 anos sorri em uma festa; no crachá, "Rafael — Coop. Serrana".
+    - type: text
+      text: Na borda rasgada aparece apenas um braço feminino, com uma pulseira de contas verdes.
+    - type: handwriting
+      text: festa de fim de ano — Coop. Serrana
+      note: Verso da foto, a lápis.
+
+# ---------------------------------------------------------------------------
+# A — Central (capítulo 2: O trajeto)
+# ---------------------------------------------------------------------------
+- id: ev.alarme
+  title: Log técnico — carro 3
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Aberturas de porta registradas no carro 3.
+  body:
+    - type: table
+      columns: [Hora, Evento]
+      rows:
+        - ["22h19min04s", "Porta 3B (vestíbulo traseiro) aberta com o trem parado — ALARME"]
+        - ["22h19min31s", "Porta 3B fechada"]
+    - type: text
+      text: Nenhuma outra abertura de porta entre a partida e a chegada.
+
+- id: ev.extrato
+  title: Movimentação do cartão de Rafael Moura
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Dados fornecidos pelo banco a pedido da investigação.
+  body:
+    - type: table
+      columns: [Data, Hora, Descrição, Valor]
+      rows:
+        - ["02/10", "—", "Cred-Mais Financeira — parcela em atraso (3ª notificação)", "—"]
+        - ["05/10", "11h20", "Saque — caixa eletrônico, Serra Alta", "R$ 1.000,00"]
+        - ["09/10", "20h40", "Bilheteria Ferrovia Serra–Lago", "R$ 86,00"]
+        - ["09/10", "22h04", "Farmácia da Rodoviária — Serra Alta", "R$ 38,90"]
+    - type: text
+      text: "Observação do banco: débito total junto à Cred-Mais de R$ 214.000,00, em cobrança judicial."
+
+- id: ev.ligacoes
+  title: Ligações recebidas — Estação Ferreira Lago
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Registro da central telefônica na noite de 09/10.
+  body:
+    - type: table
+      columns: [Hora, Origem, Resumo]
+      rows:
+        - ["23h31", "CCO", "Aviso de atraso de 5 min do trem 117."]
+        - ["23h52", "Tomás Moura (irmão de passageiro)", "Perguntou se o 117 já tinha chegado e se \"já tinham procurado na ponte\". Informado de que não havia ocorrência."]
+        - ["00h20", "Tomás Moura", "Comunicou o desaparecimento do irmão, Rafael Moura."]
+
+- id: ev.ocorrencia-clara
+  title: Formulário de ocorrência a bordo
+  kind: document
+  visibleTo: A
+  share: full
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Relato de testemunha preenchido à mão por uma passageira.
+  body:
+    - type: fields
+      items:
+        - { label: Testemunha, value: "Clara Vidal — poltrona C3-23" }
+        - { label: Preenchido em, value: "09/10, 23h59, na plataforma" }
+    - type: handwriting
+      text: O passageiro da poltrona 24 levantou quando o trem parou na ponte e foi para o vestíbulo. Ouvi o alarme da porta. Ele não voltou. Achei que tinha trocado de carro, por isso não falei com ninguém.
+      note: Letra inclinada à direita; o "q" tem um laço fechado; acentos longos.
+
+- id: ev.ficha-jonas
+  title: Antecedentes — Jonas Ferraz
+  kind: person
+  visibleTo: A
+  share: full
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Consulta de rotina sobre os passageiros do carro 3.
+  body:
+    - type: fields
+      items:
+        - { label: Nome, value: "Jonas Ferraz, 29 anos" }
+        - { label: Registro, value: "Furto simples (2021) — pena alternativa cumprida" }
+        - { label: Situação atual, value: "Sem pendências. Trabalha como entregador em Ferreira Lago." }
+
+# ---------------------------------------------------------------------------
+# B — Campo (capítulo 2: O trajeto)
+# ---------------------------------------------------------------------------
+- id: ev.caderneta
+  title: Caderneta do chefe de trem
+  kind: document
+  visibleTo: B
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Anotações de Aurélio Santos, chefe do trem 117.
+  body:
+    - type: handwriting
+      text: "Partida SA — contagem visual: 11 cab. Sistema diz 12. Rever na próxima."
+    - type: handwriting
+      text: "Rosa reclamou do café frio de novo."
+    - type: handwriting
+      text: "Parada na ponte. Alarme porta 3B — fui ver: a moça da 23 estava no vestíbulo, disse que foi tomar ar. Porta já fechando."
+    - type: handwriting
+      text: "Chegada FL. Mala na 24."
+    - type: text
+      text: As anotações não têm horário; estão na ordem em que foram escritas.
+
+- id: ev.depoimento-clara
+  title: Depoimento — Clara Vidal
+  kind: testimony
+  visibleTo: B
+  share: full
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Passageira da poltrona 23, ao lado da mala.
+  body:
+    - type: quote
+      speaker: Clara Vidal
+      text: O homem da 24 era calado, nem tirou o casaco. Quando o trem parou na ponte, ele levantou e foi para o vestíbulo. Ouvi o alarme da porta. Ele não voltou.
+    - type: quote
+      speaker: Clara Vidal
+      text: A mala? Era dele, ficou na poltrona. Eu não mexi em nada.
+
+- id: ev.depoimento-atendente
+  title: Depoimento — Rosa Nunes (atendente)
+  kind: testimony
+  visibleTo: B
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Responsável pelo carrinho de lanches do trem 117.
+  body:
+    - type: quote
+      speaker: Rosa Nunes
+      text: Eu começo o serviço pelo carro 3 sempre logo depois que o trem passa por Vila Nogueira. Naquela noite foi igual.
+    - type: quote
+      speaker: Rosa Nunes
+      text: A 24 estava vazia. Achei que o moço tinha ido ao banheiro. A moça da 23 estava com uma mala vermelha no chão, entre os pés. Pediu dois cafés, disse que um era "para o amigo da 24". Só bebeu um.
+
+- id: ev.depoimento-jonas
+  title: Depoimento — Jonas Ferraz
+  kind: testimony
+  visibleTo: B
+  share: full
+  availableWhen: { chapterReached: ch.trajeto }
+  summary: Passageiro da poltrona 19, carro 3.
+  body:
+    - type: quote
+      speaker: Jonas Ferraz
+      text: Já sei que vão olhar minha ficha. Dormi quase a viagem toda, de verdade.
+    - type: quote
+      speaker: Jonas Ferraz
+      text: Lembro de uma coisa só. Logo que o trem saiu, fui ao banheiro e a moça da 23 estava com uma mala vermelha no colo, abraçada nela. Do lado dela, ninguém.
+
+# ---------------------------------------------------------------------------
+# A — Central (capítulo 3: Serra Alta)
+# ---------------------------------------------------------------------------
+- id: ev.guarda-volumes
+  title: Guarda-volumes — Rodoviária de Serra Alta
+  kind: record
+  visibleTo: A
+  availableWhen: { chapterReached: ch.serra-alta }
+  summary: Locações de armários automáticos na noite de 09/10.
+  body:
+    - type: table
+      columns: [Armário, Locação, Cliente, Situação]
+      rows:
+        - ["07", "19h12", "J. P.", "Retirado às 20h30"]
+        - ["12", "21h50", "R. M.", "Ocupado — não retirado (pago por 7 dias, em dinheiro)"]
+        - ["15", "22h41", "A. C.", "Retirado às 23h05"]
+    - type: text
+      text: "O cliente cadastra a senha tocando símbolos no teclado; o sistema converte cada símbolo em um dígito. A administração só autoriza a abertura com a senha de 4 dígitos."
+    - type: table
+      caption: Legenda do teclado
+      columns: [Símbolo, Dígito]
+      rows:
+        - ["✚", "0"]
+        - ["☐", "1"]
+        - ["☆", "2"]
+        - ["○", "3"]
+        - ["▽", "4"]
+        - ["◇", "5"]
+        - ["◎", "6"]
+        - ["△", "7"]
+        - ["⬡", "8"]
+        - ["✕", "9"]
+
+- id: ev.apolice
+  title: Apólice de seguro de vida — Rafael Moura
+  kind: document
+  visibleTo: A
+  share: full
+  availableWhen: { chapterReached: ch.serra-alta }
+  summary: Dados enviados pela seguradora Amparo Vida.
+  body:
+    - type: fields
+      items:
+        - { label: Segurado, value: "Rafael Moura" }
+        - { label: Beneficiário, value: "Tomás Moura (irmão)" }
+        - { label: Capital, value: "R$ 1.200.000,00" }
+        - { label: Contratação, value: "14/08 (menos de dois meses antes)" }
+    - type: quote
+      speaker: Cláusula 9
+      text: Em caso de morte presumida por desaparecimento em acidente de transporte, comprovado por boletim de ocorrência, a indenização será paga em até 30 dias.
+    - type: text
+      text: "Pedido de indenização aberto por Tomás Moura em 10/10, às 07h12."
+
+# ---------------------------------------------------------------------------
+# B — Campo (capítulo 3: Serra Alta)
+# ---------------------------------------------------------------------------
+- id: ev.pericia-bilhete
+  title: Laudo do bilhete
+  kind: object
+  visibleTo: B
+  availableWhen: { chapterReached: ch.serra-alta }
+  summary: Exame do papel e da escrita do bilhete encontrado na mala.
+  body:
+    - type: fields
+      items:
+        - { label: Tinta, value: "Esferográfica azul" }
+        - { label: Caligrafia, value: "Letra inclinada à direita; \"q\" com laço fechado; acentos longos" }
+        - { label: Papel, value: "Folha de bloco pautado pequeno, arrancada" }
+    - type: text
+      text: "Com luz rasante, o papel mostra sulcos deixados por algo escrito com força na folha de cima do bloco: quatro símbolos, da esquerda para a direita."
+    - type: stamp
+      text: △  ○  ✕  ☐
+
+# ---------------------------------------------------------------------------
+# Capítulo 4: Relatório
+# ---------------------------------------------------------------------------
+- id: ev.armario
+  title: Conteúdo do armário 12
+  kind: object
+  visibleTo: both
+  availableWhen: { puzzleSolved: pz.armario }
+  summary: Aberto pela polícia de Serra Alta às 02h10 com a senha informada.
+  body:
+    - type: list
+      items:
+        - Celular de Rafael Moura, desligado.
+        - Carteira com os documentos de Rafael Moura.
+        - "Comprovante de passagem de ônibus Serra Alta → Porto Fundo, 09/10, 23h30, em nome de \"R. Moreira\"."
+        - Envelope com uma cópia da apólice de seguro.
+
+- id: ev.mensagens
+  title: Mensagens do celular de Rafael
+  kind: message
+  visibleTo: B
+  share: full
+  availableWhen: { puzzleSolved: pz.armario }
+  summary: Conversas recuperadas do aparelho encontrado no armário.
+  body:
+    - type: heading
+      text: Tomás (06/10)
+    - type: quote
+      speaker: Tomás
+      text: A apólice tá no meu nome. Trinta dias depois do "acidente" eles pagam. Não liga pra ninguém.
+    - type: heading
+      text: Clara (08/10 e 09/10)
+    - type: quote
+      speaker: Rafael
+      text: Você me deve aquela, Clara. Leva a mala, senta na 23 e deixa na 24 quando o trem parar na ponte. Para o relógio na hora e abre a porta pra disparar o alarme.
+    - type: quote
+      speaker: Clara
+      text: E se perguntarem?
+    - type: quote
+      speaker: Rafael
+      text: Diz que me viu ir pro vestíbulo. Só isso.
+    - type: quote
+      speaker: Clara (09/10, 21h20)
+      text: Não consigo fazer isso.
+    - type: quote
+      speaker: Rafael (09/10, 21h46)
+      text: Consegue sim. Lembra quem cobriu o seu rombo no caixa. A senha do armário tá no papel que eu te dei. Apaga essa conversa.

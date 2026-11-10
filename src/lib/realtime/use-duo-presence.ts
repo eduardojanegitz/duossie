@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 /** O que o jogador está fazendo, compartilhado só com o parceiro. */
@@ -15,8 +15,23 @@ type PresencePayload = { activity: Activity; visible: boolean; at: number };
  * Publica a atividade do jogador e devolve o status do parceiro.
  * É efêmera de propósito: nada aqui é fonte de verdade do jogo.
  */
-export function useDuoPresence(params: { duoId: string; userId: string; partnerId: string | null; activity: Activity }) {
+export function useDuoPresence(params: {
+  duoId: string;
+  userId: string;
+  partnerId: string | null;
+  activity: Activity;
+  /** Sinal do servidor de que uma sessão mudou (não traz conteúdo do jogo). */
+  onSessionUpdated?: (payload: { sessionId: string; version: number }) => void;
+  /** Chamado ao (re)conectar: momento de buscar o estado atual no servidor. */
+  onReconnect?: () => void;
+}) {
   const { duoId, userId, partnerId } = params;
+  const onSessionUpdated = useRef(params.onSessionUpdated);
+  const onReconnect = useRef(params.onReconnect);
+  useEffect(() => {
+    onSessionUpdated.current = params.onSessionUpdated;
+    onReconnect.current = params.onReconnect;
+  });
   const activityKey = JSON.stringify(params.activity);
   const [partner, setPartner] = useState<{ status: PartnerStatus; activity: Activity | null }>({
     status: "connecting",
@@ -56,10 +71,19 @@ export function useDuoPresence(params: { duoId: string; userId: string; partnerI
     void (async () => {
       await supabase.realtime.setAuth();
       if (cancelled) return;
+      let subscribedOnce = false;
       channel
         .on("presence", { event: "sync" }, readPartner)
+        .on("broadcast", { event: "session_updated" }, (message) => {
+          onSessionUpdated.current?.(message.payload as { sessionId: string; version: number });
+        })
         .subscribe((status) => {
-          if (status === "SUBSCRIBED") void track();
+          if (status === "SUBSCRIBED") {
+            void track();
+            // Reconexão: eventos podem ter sido perdidos enquanto o socket estava fora.
+            if (subscribedOnce) onReconnect.current?.();
+            subscribedOnce = true;
+          }
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             setPartner((p) => ({ ...p, status: p.status === "connecting" ? "offline" : p.status }));
           }

@@ -7,18 +7,22 @@
  */
 import { existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../src/server/supabase/database.types";
-import { loadSeasonCatalogs } from "./lib/load-content";
+import type { Database, Json } from "../src/server/supabase/database.types";
+import { loadAllContent } from "./lib/load-content";
 
 const checkOnly = process.argv.includes("--check");
 
 async function main() {
-  const { seasons, problems } = loadSeasonCatalogs();
+  const { seasons, cases, problems } = loadAllContent();
   if (problems.length > 0) {
     console.error("Conteúdo inválido:\n" + problems.map((p) => `  - ${p}`).join("\n"));
     process.exit(1);
   }
-  console.log(`✓ ${seasons.length} temporada(s), ${seasons.reduce((n, s) => n + s.cases.length, 0)} caso(s) válidos.`);
+  console.log(
+    `✓ ${seasons.length} temporada(s), ${seasons.reduce((n, s) => n + s.cases.length, 0)} caso(s) no catálogo, ` +
+      `${cases.length} caso(s) jogável(is) válidos (schema, referências e simulação).`,
+  );
+  for (const c of cases) for (const w of c.warnings) console.warn(`  aviso ${c.definition.id}: ${w}`);
   if (checkOnly) return;
 
   if (existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -51,6 +55,42 @@ async function main() {
     const { error: casesError } = await db.from("cases").upsert(rows);
     if (casesError) throw casesError;
     console.log(`✓ Temporada ${season.number} importada (${rows.length} casos).`);
+  }
+
+  // Definições jogáveis: cada versão é imutável. Mudou o conteúdo → incremente `version`.
+  for (const c of cases) {
+    const def = c.definition;
+    const { data: existing, error: readError } = await db
+      .from("case_versions")
+      .select("id, content_hash")
+      .eq("case_id", def.id)
+      .eq("version", def.version)
+      .maybeSingle();
+    if (readError) throw readError;
+
+    if (existing && existing.content_hash !== c.contentHash) {
+      throw new Error(
+        `${def.id} v${def.version}: o conteúdo mudou mas a versão não. Incremente "version" em case.yaml ` +
+          "(investigações em andamento continuam na versão antiga).",
+      );
+    }
+    if (!existing) {
+      const { error } = await db.from("case_versions").insert({
+        case_id: def.id,
+        version: def.version,
+        content_hash: c.contentHash,
+        definition: def as unknown as Json & object,
+      });
+      if (error) throw error;
+      console.log(`✓ ${def.id} v${def.version} publicado.`);
+    } else {
+      console.log(`= ${def.id} v${def.version} já publicado (sem alterações).`);
+    }
+    const { error: updateError } = await db
+      .from("cases")
+      .update({ is_playable: true, puzzle_count: def.puzzles.length })
+      .eq("id", def.id);
+    if (updateError) throw updateError;
   }
 }
 

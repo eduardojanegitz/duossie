@@ -8,6 +8,10 @@ import { FileLabel, LoadingFile, Screen } from "@/components/layout/screen";
 import { DIFFICULTY_LABEL, formatDuration } from "@/lib/case-status";
 import { requireViewer } from "@/server/auth/viewer";
 import { getCaseSummary } from "@/server/catalog";
+import { getCaseRoles } from "@/server/game/service";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { StartInvestigation } from "./start-investigation";
 import { DossierReveal } from "./dossier-reveal";
 
 export const metadata: Metadata = { title: "Arquivo do caso" };
@@ -24,13 +28,15 @@ export default function CasePage({ params }: PageProps<"/casos/[caseId]">) {
 }
 
 async function CaseDossier({ params }: { params: PageProps<"/casos/[caseId]">["params"] }) {
-  await requireViewer("ready");
+  const viewer = await requireViewer("ready");
+  const partner = viewer.duo!.members.find((m) => m.id !== viewer.userId);
   const { caseId } = await params;
   const found = await getCaseSummary(caseId);
   if (!found) notFound();
   const { season, caseSummary: c } = found;
   const duration = formatDuration(c.durationMin, c.durationMax);
   const locked = c.status === "locked";
+  const roles = c.status === "available" ? await getCaseRoles(c.id) : null;
 
   return (
     <DossierReveal>
@@ -97,6 +103,14 @@ async function CaseDossier({ params }: { params: PageProps<"/casos/[caseId]">["p
               </p>
             ) : locked ? (
               <p className="text-sm text-paper-500">Conclua os casos exigidos para liberar este arquivo.</p>
+            ) : (c.status === "in_progress" || c.status === "completed") && c.sessionId ? (
+              <Button asChild block>
+                <Link href={`/investigacao/${c.sessionId}`}>
+                  {c.status === "completed" ? "Ver a resolução" : `Continuar investigação (${c.progress ?? 0}%)`}
+                </Link>
+              </Button>
+            ) : roles ? (
+              <StartInvestigation caseId={c.id} roles={roles} partnerName={partner?.codename ?? "Seu parceiro"} />
             ) : null}
           </footer>
         </div>

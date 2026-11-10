@@ -1,0 +1,117 @@
+# ⚠️ SPOILERS — enigmas e respostas do Caso 001. Não leia se for jogar.
+
+- id: pz.desembarque
+  type: match
+  title: Quem desceu do trem?
+  prompt:
+    A: >-
+      O manifesto tem 12 nomes; as câmeras registraram 11 pessoas (C1 a C11). As descrições
+      das câmeras estão com seu parceiro; nomes, idades e observações estão com você.
+      Identifiquem os cinco passageiros abaixo — e quem não aparece.
+    B: >-
+      Você tem as descrições das câmeras; seu parceiro tem o manifesto, com nomes, idades e
+      observações. Combinem o que cada um sabe para identificar os cinco passageiros abaixo.
+  requires: { A: [ev.manifesto], B: [ev.cameras] }
+  left:
+    - { id: rafael, label: "Rafael Moura (C3-24)" }
+    - { id: clara, label: "Clara Vidal (C3-23)" }
+    - { id: jonas, label: "Jonas Ferraz (C3-19)" }
+    - { id: lurdes, label: "Lurdes Pacheco (C1-05)" }
+    - { id: hideo, label: "Hideo Tanaka (C1-02)" }
+  options:
+    - { id: c1, label: C1 }
+    - { id: c2, label: C2 }
+    - { id: c3, label: C3 }
+    - { id: c4, label: C4 }
+    - { id: c5, label: C5 }
+    - { id: c6, label: C6 }
+    - { id: c7, label: C7 }
+    - { id: c8, label: C8 }
+    - { id: c9, label: C9 }
+    - { id: c10, label: C10 }
+    - { id: c11, label: C11 }
+    - { id: nenhum, label: Não aparece }
+  answer:
+    pairs: { rafael: nenhum, clara: c7, jonas: c3, lurdes: c10, hideo: c1 }
+  hints:
+    A:
+      - text: Comece pelos passageiros com observações marcantes no manifesto — bagagem, mobilidade, equipamento.
+      - text: Peça ao parceiro a idade aproximada e a bagagem de cada pessoa filmada, e vá eliminando quem já foi identificado.
+      - text: Se sobrarem duas mulheres de uns 35 anos, uma delas está com uma criança.
+    B:
+      - text: Descreva ao parceiro o que cada pessoa carrega. Bagagem é o que mais distingue.
+      - text: Seu parceiro sabe a idade de cada passageiro. Cruzem idade e bagagem.
+      - text: Quem está no manifesto e não combina com nenhuma câmera "não aparece".
+  onSolve:
+    - startChapter: ch.trajeto
+  solvedText: >-
+    Onze desembarques identificados. Rafael Moura, da poltrona 24, não aparece em nenhuma câmera.
+    E a passageira da 23 deixou o trem de mãos vazias.
+
+- id: pz.linha-do-tempo
+  type: sequence
+  title: A noite em ordem
+  availableWhen: { chapterReached: ch.trajeto }
+  prompt:
+    A: >-
+      Reconstruam a ordem real dos acontecimentos da noite, do primeiro ao último.
+      Você tem os horários dos sistemas; seu parceiro tem relatos e objetos.
+    B: >-
+      Reconstruam a ordem real dos acontecimentos da noite, do primeiro ao último.
+      Seu parceiro tem os horários dos sistemas; você tem relatos e objetos.
+  requires:
+    A: [ev.catracas, ev.horario, ev.extrato, ev.alarme, ev.ligacoes]
+    B: [ev.caderneta, ev.depoimento-atendente, ev.relogio]
+  items:
+    - { id: alarme, label: "O alarme da porta do carro 3 dispara." }
+    - { id: ligacao, label: "Alguém liga para a estação perguntando pela ponte." }
+    - { id: vazia, label: "A atendente encontra a poltrona 24 vazia." }
+    - { id: validacao, label: "O bilhete de Rafael Moura é validado na catraca." }
+    - { id: relogio, label: "O relógio encontrado na mala para." }
+    - { id: farmacia, label: "O cartão de Rafael Moura é usado numa farmácia." }
+    - { id: contagem, label: "O chefe de trem faz a contagem de passageiros." }
+  answer:
+    order: [validacao, contagem, vazia, farmacia, relogio, alarme, ligacao]
+  hints:
+    A:
+      - text: Cinco desses fatos têm horário exato nos seus registros.
+      - text: Para a poltrona vazia, peça ao parceiro o relato da atendente e procure o ponto de referência no horário operacional.
+      - text: O relógio da mala marca um horário. Compare com o log técnico do carro 3.
+    B:
+      - text: Seu parceiro tem horários exatos. Pergunte por catraca, partida, cartão, alarme e ligações.
+      - text: A atendente cita um lugar, não um horário. Seu parceiro sabe quando o trem passou lá.
+      - text: A caderneta do chefe de trem diz quando a contagem foi feita.
+  onSolve:
+    - startChapter: ch.serra-alta
+    - notify:
+        to: both
+        text: "Às 22h04, enquanto o trem seguia pela serra, o cartão de Rafael Moura era usado em Serra Alta."
+  solvedText: A linha do tempo está montada — e um dos horários não cabe dentro do trem.
+
+- id: pz.armario
+  type: code
+  title: Armário 12
+  availableWhen: { chapterReached: ch.serra-alta }
+  inputLabel: Senha de 4 dígitos
+  prompt:
+    A: >-
+      A polícia de Serra Alta está diante do armário 12 da rodoviária e precisa da senha
+      cadastrada pelo cliente. Você tem a legenda do teclado de símbolos.
+    B: >-
+      O laudo do bilhete revelou algo que não estava escrito nele. A polícia de Serra Alta
+      precisa de uma senha, e seu parceiro sabe como o teclado funciona.
+  requires: { A: [ev.guarda-volumes], B: [ev.pericia-bilhete] }
+  answer:
+    accepted: ["7391"]
+  hints:
+    A:
+      - text: A senha foi cadastrada em símbolos. Você sabe o valor de cada um, mas não a ordem.
+      - text: Pergunte ao parceiro se alguma evidência traz uma sequência de símbolos.
+      - text: Converta os quatro símbolos na ordem em que aparecem.
+    B:
+      - text: Releia o laudo do bilhete até o fim.
+      - text: Os sulcos mostram quatro símbolos em ordem. Seu parceiro sabe o dígito de cada um.
+      - text: Leia os símbolos da esquerda para a direita e peça a conversão ao parceiro.
+  onSolve:
+    - startChapter: ch.relatorio
+  solvedText: O armário 12 abriu. A polícia de Serra Alta enviou a lista do conteúdo.

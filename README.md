@@ -7,9 +7,10 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 
 - Decisões aprovadas: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Plano por fases e critérios de verificação: [docs/PLAN.md](docs/PLAN.md)
+- Como criar, validar e versionar casos: [docs/CONTENT.md](docs/CONTENT.md)
 
-> ⚠️ **Spoilers:** não abra `content/cases/*/SPOILERS/` nem os arquivos de enigma se você
-> pretende jogar o caso (veja D02).
+> ⚠️ **Spoilers:** não abra `content/cases/` nem `tests/e2e/case-001.spec.ts` /
+> `tests/integration/investigation.test.ts` (usam as respostas) se você pretende jogar (veja D02).
 
 ## Estado atual
 
@@ -17,7 +18,7 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 |------|----------|
 | 1 — Fundação (setup, banco, auth, dupla) | ✅ implementada e testada |
 | 2 — Interface principal (central, catálogo, dossiês, presença) | ✅ implementada e testada |
-| 3 — Motor de investigação + fatia vertical | pendente |
+| 3 — Motor de investigação + Caso 001 jogável | ✅ implementada e testada (texto; sem áudio/arte final) |
 | 4 — Cooperação | pendente |
 | 5 — Caso 001 completo | pendente |
 | 6 — Polimento e deploy | pendente |
@@ -32,11 +33,12 @@ Supabase (Postgres, Auth, Realtime, Storage) · Zod · Vitest · Playwright.
 
 ```
 src/
-  app/            rotas (entrar, perfil, dupla, central, casos/[caseId]) + error/not-found
+  app/            rotas (entrar, perfil, dupla, central, casos/[caseId], investigacao/[sessionId]) + error/not-found
+  engine/         motor puro: schema, condições, enigmas, reducer, projeção por papel, validador/simulador
   components/     ui/ (shadcn + primitivos), layout/, brand/, case/ (dossiê, capas), duo/ (presença)
   content/        schemas Zod do conteúdo (catálogo)
   lib/            código puro e compartilhado (onboarding, situação dos casos, realtime, env)
-  server/         somente servidor: actions/, auth/ (DAL), catalog, supabase/ (clientes + tipos), errors
+  server/         somente servidor: actions/, auth/ (DAL), catalog, game/ (serviço de investigação), supabase/, errors
   proxy.ts        renovação de sessão + redirecionamento otimista
 supabase/
   migrations/     SQL versionado (schema, RLS, funções)
@@ -44,6 +46,7 @@ supabase/
   templates/      e-mail do código OTP
 content/
   seasons/        catálogo público das temporadas (YAML, sem spoilers)
+  cases/          casos jogáveis (⚠️ SPOILERS) — veja docs/CONTENT.md
 scripts/          utilitários (allowlist, importação de conteúdo, dupla local)
 tests/
   integration/    contra o Supabase local (RLS, convites, allowlist)
@@ -65,9 +68,28 @@ docs/             decisões e plano
 
 | `seasons`, `cases` | leitura para autenticados; sem escrita | só metadados sem spoiler; gravados pelo importador |
 | `realtime.messages` (tópico `duo:<id>`) | só membros da dupla | presença e sinais da dupla |
+| `case_versions` | **nenhum** | definição completa (com soluções) de cada versão publicada |
+| `case_sessions` | dupla lê metadados (status, progresso); **não** a coluna `state` | uma por caso por dupla; snapshot + `state_version` |
+| `session_players` | dupla | papel A/B de cada jogador |
+| `session_actions`, `session_events` | **nenhum** | idempotência (`action_id`) e log append-only |
 
 Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. Todas validam
-`auth.uid()` e rodam como `SECURITY DEFINER` com `search_path` vazio.
+`auth.uid()` e rodam como `SECURITY DEFINER` com `search_path` vazio. Só para o servidor
+(`service_role`): `commit_session_transition(...)` e `consume_rate_limit(...)`.
+
+## Como a investigação funciona
+
+1. O cliente envia uma ação (`view_evidence`, `share_evidence`, `attempt_puzzle`, `request_hint`,
+   `propose_theory`, `confirm_theory`, `withdraw_theory`, `reopen_theory`) com um `actionId` UUID.
+2. A Server Action confere a sessão, a dupla e o papel do jogador, roda o motor (`reduce`) e chama
+   `commit_session_transition`, que, numa transação: registra a ação (idempotência), grava o novo
+   snapshot só se a versão não mudou (concorrência otimista; em conflito o servidor tenta de novo),
+   anexa o evento ao log e manda um sinal **sem conteúdo** no canal `duo:<id>`.
+3. Cada navegador, ao receber o sinal (ou ao reconectar/voltar à aba), pede ao servidor a **própria
+   projeção** (`projectView`): só as evidências do seu papel, as compartilhadas com ele, os enunciados
+   do seu lado e as dicas que pediu. Respostas e gabarito nunca saem do servidor antes do fim.
+4. O relatório final é conjunto: um propõe, o outro confirma ou devolve. O veredito
+   (`closed`/`partial`/`archived`) não depende de tempo. Abaixo de 100 pontos, dá para reabrir.
 
 ## Fluxo de entrada
 
@@ -133,6 +155,13 @@ DB_URL="postgresql://…" npm run allowlist:add -- pessoa@exemplo.com   # produ�
 npm run check             # typecheck + lint + testes unitários + validação do conteúdo
 npm run test:integration  # requer Supabase local rodando e .env.local
 npm run test:e2e          # requer Supabase local; sobe o Next na porta 3100
+```
+
+O E2E inclui uma partida completa do Caso 001 com dois navegadores. Para gerar capturas de tela
+das telas da investigação (revisão visual em celular):
+
+```bash
+SCREENS_DIR=./capturas npx playwright test tests/e2e/screens.spec.ts
 ```
 
 Os testes de integração e E2E apagam e recriam os usuários `*@duossie.test`.
