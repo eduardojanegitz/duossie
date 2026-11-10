@@ -1,0 +1,43 @@
+# Catálogo público da Temporada 1 — SOMENTE metadados sem spoiler.
+# A definição jogável de cada caso fica em content/cases/<id>/ (Fase 3).
+# Casos sem definição publicada aparecem como "em preparação".
+id: s01
+number: 1
+title: Arquivos Desaparecidos
+tagline: Quatro arquivos. Nenhum deveria existir.
+cases:
+  - id: case-001
+    code: "001"
+    title: O Último Trem das 23h47
+    synopsis: >-
+      Um trem chega à estação com 12 passageiros registrados. As câmeras mostram
+      apenas 11 desembarcando, e a vistoria garante que ninguém ficou a bordo.
+      No último assento, uma mala esquecida e um bilhete que muda a pergunta.
+    category: Desaparecimento
+    difficulty: medium
+    duration: { min: 20, max: 40 }
+    cover: train
+  - id: case-002
+    code: "002"
+    title: A Casa Sem Moradores
+    synopsis: Arquivo em preparação.
+    category: A definir
+    difficulty: medium
+    cover: house
+    unlockRequires: [case-001]
+  - id: case-003
+    code: "003"
+    title: O Telefonema de Amanhã
+    synopsis: Arquivo em preparação.
+    category: A definir
+    difficulty: hard
+    cover: phone
+    unlockRequires: [case-002]
+  - id: case-004
+    code: "004"
+    title: O Arquivo Zero
+    synopsis: Arquivo em preparação.
+    category: A definir
+    difficulty: hard
+    cover: folder
+    unlockRequires: [case-003]

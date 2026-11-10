@@ -16,7 +16,7 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 | Fase | Situação |
 |------|----------|
 | 1 — Fundação (setup, banco, auth, dupla) | ✅ implementada e testada |
-| 2 — Interface principal | pendente |
+| 2 — Interface principal (central, catálogo, dossiês, presença) | ✅ implementada e testada |
 | 3 — Motor de investigação + fatia vertical | pendente |
 | 4 — Cooperação | pendente |
 | 5 — Caso 001 completo | pendente |
@@ -24,23 +24,27 @@ recebe informações diferentes, e nenhum enigma cooperativo se resolve sozinho.
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components) · TypeScript estrito · Tailwind CSS 4 · Motion ·
-Lucide · Supabase (Postgres, Auth, Realtime, Storage) · Zod · Vitest · Playwright.
+Next.js 16 (App Router, Cache Components) · TypeScript estrito · Tailwind CSS 4 ·
+shadcn/ui (Radix, tokens mapeados para a paleta do Duossie) · Motion · Lucide ·
+Supabase (Postgres, Auth, Realtime, Storage) · Zod · Vitest · Playwright.
 
 ## Estrutura
 
 ```
 src/
-  app/            rotas (entrar, perfil, dupla, central)
-  components/     ui/ (primitivos), layout/, brand/
-  lib/            código puro e compartilhado (onboarding, env público, cliente browser)
-  server/         somente servidor: actions/, auth/ (DAL), supabase/ (clientes + tipos), errors
+  app/            rotas (entrar, perfil, dupla, central, casos/[caseId]) + error/not-found
+  components/     ui/ (shadcn + primitivos), layout/, brand/, case/ (dossiê, capas), duo/ (presença)
+  content/        schemas Zod do conteúdo (catálogo)
+  lib/            código puro e compartilhado (onboarding, situação dos casos, realtime, env)
+  server/         somente servidor: actions/, auth/ (DAL), catalog, supabase/ (clientes + tipos), errors
   proxy.ts        renovação de sessão + redirecionamento otimista
 supabase/
   migrations/     SQL versionado (schema, RLS, funções)
   seed.sql        dados SOMENTE locais (allowlist de teste)
   templates/      e-mail do código OTP
-scripts/          utilitários (allowlist)
+content/
+  seasons/        catálogo público das temporadas (YAML, sem spoilers)
+scripts/          utilitários (allowlist, importação de conteúdo, dupla local)
 tests/
   integration/    contra o Supabase local (RLS, convites, allowlist)
   e2e/            Playwright, dois navegadores independentes
@@ -59,6 +63,9 @@ docs/             decisões e plano
 | `private.auth_allowlist` | **nenhum** (schema não exposto) | aplicada no hook `before_user_created` |
 | `private.rate_limits` | **nenhum** | janela fixa; usado em convites |
 
+| `seasons`, `cases` | leitura para autenticados; sem escrita | só metadados sem spoiler; gravados pelo importador |
+| `realtime.messages` (tópico `duo:<id>`) | só membros da dupla | presença e sinais da dupla |
+
 Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. Todas validam
 `auth.uid()` e rodam como `SECURITY DEFINER` com `search_path` vazio.
 
@@ -67,7 +74,13 @@ Funções RPC: `create_duo(p_name)`, `create_duo_invite()`, `join_duo(p_code)`. 
 1. `/entrar` → e-mail → código de 6 dígitos (OTP) por e-mail. E-mails fora da allowlist são recusados pelo servidor de autenticação.
 2. `/perfil` → codinome.
 3. `/dupla` → criar a dupla e gerar um convite (`XXXX-XXXX`), ou entrar com um convite.
-4. `/central` → disponível quando a dupla tem os dois membros.
+4. `/central` → disponível quando a dupla tem os dois membros: dupla, presença do parceiro
+   (na central / investigando / ausente / offline, via Realtime Presence), casos por temporada.
+5. `/casos/[caseId]` → dossiê do caso (resumo, metadados, requisitos de desbloqueio).
+
+Situação de um caso para a dupla (`src/lib/case-status.ts`): concluído > em andamento >
+bloqueado (requisitos não concluídos) > em preparação (sem definição publicada) > disponível.
+Hoje todos os casos estão **em preparação**: a definição jogável do Caso 001 chega na Fase 3.
 
 A rota `/` redireciona para a etapa certa. A autorização acontece no servidor (DAL em
 `src/server/auth/viewer.ts` + RLS); o Proxy só renova a sessão e redireciona quem não está logado.
@@ -84,6 +97,9 @@ cp .env.example .env.local  # preencha com API_URL, PUBLISHABLE_KEY e SECRET_KEY
 npm run dev               # http://localhost:3000
 ```
 
+Depois de subir o banco, importe o catálogo: `npm run content:import` (o `npm run db:reset` já faz isso).
+Para ter uma dupla pronta (Corvo & Lince) sem passar pelo onboarding: `npm run dev:seed-duo`.
+
 E-mails locais (códigos OTP) aparecem no Mailpit: http://127.0.0.1:54324.
 Usuários locais permitidos: `investigador.a@duossie.test`, `investigador.b@duossie.test`,
 `investigador.c@duossie.test`.
@@ -99,7 +115,8 @@ Usuários locais permitidos: `investigador.a@duossie.test`, `investigador.b@duos
 ### Migrations
 
 - Nova migration: `npx supabase migration new <nome>` e escreva o SQL em `supabase/migrations/`.
-- Aplicar do zero no local: `npm run db:reset` (recria o banco, roda migrations e `seed.sql`).
+- Aplicar do zero no local: `npm run db:reset` (recria o banco, roda migrations, `seed.sql` e importa o conteúdo).
+- Aplicar só as novas: `npx supabase migration up`.
 - Regenerar tipos TypeScript: `npm run db:types`.
 - Produção: `npx supabase link --project-ref <ref>` e `npx supabase db push`.
 
@@ -113,7 +130,7 @@ DB_URL="postgresql://…" npm run allowlist:add -- pessoa@exemplo.com   # produ�
 ## Testes
 
 ```bash
-npm run check             # typecheck + lint + testes unitários
+npm run check             # typecheck + lint + testes unitários + validação do conteúdo
 npm run test:integration  # requer Supabase local rodando e .env.local
 npm run test:e2e          # requer Supabase local; sobe o Next na porta 3100
 ```
@@ -127,5 +144,6 @@ Ainda não existem projeto Supabase Cloud nem projeto Vercel. Quando existirem:
 1. Supabase: criar o projeto, `supabase link`, `supabase db push`; em Auth, configurar SMTP
    próprio, o template de e-mail com `{{ .Token }}` (veja `supabase/templates/otp.html`), o
    hook `before_user_created` → `public.hook_before_user_created` e a Site URL do domínio Vercel.
-2. Adicionar os e-mails reais à allowlist (`DB_URL=… npm run allowlist:add`).
-3. Vercel: importar o repositório e definir as três variáveis acima.
+2. Importar o conteúdo com as variáveis do projeto: `npm run content:import`.
+3. Adicionar os e-mails reais à allowlist (`DB_URL=… npm run allowlist:add`).
+4. Vercel: importar o repositório e definir as três variáveis acima.

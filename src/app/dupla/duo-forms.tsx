@@ -63,7 +63,7 @@ export function JoinDuoForm() {
         placeholder="XXXX-XXXX"
         className="font-mono uppercase tracking-[0.3em]"
       />
-      <Button type="submit" variant="ghost" block disabled={pending}>
+      <Button type="submit" variant="outline" block disabled={pending}>
         {pending ? "Verificando…" : "Entrar na dupla"}
       </Button>
     </form>
@@ -109,7 +109,7 @@ export function InvitePanel() {
           <p className="text-sm text-paper-500">
             Válido até {new Date(invite.expiresAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}. Uso único.
           </p>
-          <Button variant="ghost" onClick={copy}>
+          <Button variant="outline" onClick={copy}>
             {copied ? <Check aria-hidden className="size-4" /> : <Copy aria-hidden className="size-4" />}
             {copied ? "Copiado" : "Copiar código"}
           </Button>
@@ -122,7 +122,7 @@ export function InvitePanel() {
           {error}
         </p>
       ) : null}
-      <Button variant={invite ? "quiet" : "primary"} block onClick={generate} disabled={pending}>
+      <Button variant={invite ? "quiet" : "default"} block onClick={generate} disabled={pending}>
         {pending ? "Gerando…" : invite ? "Gerar novo código" : "Gerar código de convite"}
       </Button>
     </section>

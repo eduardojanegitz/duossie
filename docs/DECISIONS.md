@@ -22,3 +22,7 @@ Alterar uma decisão = editar esta página e citar o motivo.
 | D15 | Next.js | Next.js 16 com `cacheComponents` habilitado: toda leitura de sessão fica atrás de `<Suspense>`. Auth checa no servidor (DAL); o Proxy só renova cookies. | Padrão do template atual; mantém shell estático rápido. |
 | D16 | Gerenciador de pacotes | npm (pnpm não está instalado na máquina). | |
 | D17 | Formato do conteúdo | Casos em YAML + Markdown, validados por Zod, importados para `case_versions`. Nenhum código executável nos casos. | |
+| D18 | Componentes | shadcn/ui (base Radix, preset Nova) com tokens semânticos mapeados para a paleta do Duossie; `Button` estendido com tamanho `touch` (48px) e variante `quiet`. Helper `cn` do pacote `cn` (padrão atual do shadcn). | Preferência inicial + consistência. |
+| D19 | Catálogo | Metadados públicos (sem spoiler) de temporadas e casos em `content/seasons/*.yaml`, importados para `seasons`/`cases`. Casos sem definição publicada aparecem como "em preparação", sem botão de iniciar. | Nada de telas falsas. |
+| D20 | Presença | Realtime Presence no canal privado `duo:<id>`, autorizado por RLS em `realtime.messages`. Efêmera: não é fonte de verdade do jogo. | Seção 12 do briefing. |
+| D21 | Abertura | Uma vez por sessão do navegador, ~2,6s, pulável, omitida com `prefers-reduced-motion`. | Seção 18. |

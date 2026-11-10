@@ -23,7 +23,27 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "duo_invites": {
+            "cases": {
+                  Row: {
+                    "category": string,"code": string,"cover": string,"created_at": string,"difficulty": Database["public"]['Enums']["case_difficulty"],"duration_max": number | null,"duration_min": number | null,"id": string,"is_playable": boolean,"puzzle_count": number | null,"season_id": string,"sort_order": number,"synopsis": string,"title": string,"unlock_requires": (string)[],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category": string,"code": string,"cover": string,"created_at"?: string,"difficulty": Database["public"]['Enums']["case_difficulty"],"duration_max"?: number | null,"duration_min"?: number | null,"id": string,"is_playable"?: boolean,"puzzle_count"?: number | null,"season_id": string,"sort_order"?: number,"synopsis": string,"title": string,"unlock_requires"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "category"?: string,"code"?: string,"cover"?: string,"created_at"?: string,"difficulty"?: Database["public"]['Enums']["case_difficulty"],"duration_max"?: number | null,"duration_min"?: number | null,"id"?: string,"is_playable"?: boolean,"puzzle_count"?: number | null,"season_id"?: string,"sort_order"?: number,"synopsis"?: string,"title"?: string,"unlock_requires"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cases_season_id_fkey"
+      columns: ["season_id"]
+isOneToOne: false
+      referencedRelation: "seasons"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"duo_invites": {
                   Row: {
                     "code_hash": string,"created_at": string,"created_by": string,"duo_id": string,"expires_at": string,"id": string,"revoked_at": string | null,"used_at": string | null,"used_by": string | null
                   }
@@ -115,6 +135,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"seasons": {
+                  Row: {
+                    "created_at": string,"id": string,"number": number,"tagline": string | null,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id": string,"number": number,"tagline"?: string | null,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"number"?: number,"tagline"?: string | null,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
@@ -137,7 +171,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            [_ in never]: never
+            "case_difficulty": "easy"|"medium"|"hard"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -257,7 +291,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            
+            "case_difficulty": ["easy", "medium", "hard"]
           }
         }
 } as const

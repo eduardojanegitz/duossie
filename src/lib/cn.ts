@@ -1,6 +1,2 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+/** Junta classes Tailwind resolvendo conflitos (implementação do pacote `cn`, padrão do shadcn/ui). */
+export { cn } from "cn";

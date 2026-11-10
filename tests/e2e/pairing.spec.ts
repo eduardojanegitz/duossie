@@ -43,8 +43,9 @@ test("rota protegida redireciona quem não está logado", async ({ page }) => {
 
 test("dois investigadores entram, formam a dupla e reconectam sem perder o vínculo", async ({ browser }) => {
   // Sessões totalmente independentes (cookies separados), como dois celulares.
-  const ctxA = await browser.newContext();
-  const ctxB = await browser.newContext();
+  // A com animações; B com movimento reduzido (a abertura deve ser omitida).
+  const ctxA = await browser.newContext({ reducedMotion: "no-preference" });
+  const ctxB = await browser.newContext({ reducedMotion: "reduce" });
   const a = await ctxA.newPage();
   const b = await ctxB.newPage();
 
@@ -68,28 +69,61 @@ test("dois investigadores entram, formam a dupla e reconectam sem perder o vínc
   // A tela de A percebe o parceiro sozinha (atualização periódica).
   await expect(a.getByText("Lince")).toBeVisible({ timeout: 15_000 });
 
-  for (const [page, pair] of [
-    [a, "Corvo & Lince"],
-    [b, "Lince & Corvo"],
-  ] as const) {
-    await page.getByRole("link", { name: "Ir para a central" }).click();
-    await expect(page).toHaveURL(/\/central$/);
-    await expect(page.getByTestId("central-ready")).toBeVisible();
-    await expect(page.getByText(pair)).toBeVisible();
-  }
+  // A chega à central: a abertura aparece uma vez e pode ser pulada.
+  await a.getByRole("link", { name: "Ir para a central" }).click();
+  await expect(a).toHaveURL(/\/central$/);
+  await expect(a.getByText("Toque para pular")).toBeVisible();
+  await a.getByText("Toque para pular").click();
+  await expect(a.getByText("Toque para pular")).toBeHidden();
+  await expect(a.getByTestId("central-ready")).toHaveText("Unidade Noturna");
+  await a.reload();
+  await expect(a.getByTestId("central-ready")).toBeVisible();
+  await expect(a.getByText("Toque para pular")).toHaveCount(0);
+
+  // B (movimento reduzido) chega sem abertura.
+  await b.getByRole("link", { name: "Ir para a central" }).click();
+  await expect(b).toHaveURL(/\/central$/);
+  await expect(b.getByTestId("central-ready")).toHaveText("Unidade Noturna");
+  await expect(b.getByText("Toque para pular")).toHaveCount(0);
+
+  // Presença em tempo real: cada um vê o parceiro na central.
+  await expect(a.getByTestId("partner-presence")).toHaveAttribute("data-status", "online", { timeout: 15_000 });
+  await expect(a.getByTestId("partner-presence")).toContainText("Lince");
+  await expect(b.getByTestId("partner-presence")).toHaveAttribute("data-status", "online", { timeout: 15_000 });
+
+  // Catálogo da temporada 1 em formato de dossiê.
+  await expect(a.getByRole("heading", { name: "Arquivos Desaparecidos" })).toBeVisible();
+  await expect(a.getByRole("link", { name: /^Caso 001: O Último Trem das 23h47/ })).toBeVisible();
+  await expect(a.getByRole("link", { name: /^Caso 002: .*Bloqueado/ })).toBeVisible();
+
+  // Dossiê de um caso bloqueado mostra o requisito; o do Caso 001 mostra o resumo.
+  await a.getByRole("link", { name: /^Caso 002:/ }).click();
+  await expect(a.getByRole("heading", { name: "Acesso bloqueado" })).toBeVisible();
+  await expect(a.getByText("Caso 001 — O Último Trem das 23h47")).toBeVisible();
+  await a.getByRole("link", { name: "← Central" }).click();
+  await a.getByRole("link", { name: /^Caso 001:/ }).click();
+  await expect(a.getByRole("heading", { name: "O Último Trem das 23h47" })).toBeVisible();
+  await expect(a.getByRole("heading", { name: "Resumo do arquivo" })).toBeVisible();
+
+  // Caso inexistente cai na tela de "não encontrado".
+  await a.goto("/casos/case-404");
+  await expect(a.getByRole("heading", { name: "Nenhum arquivo com essa referência." })).toBeVisible();
 
   // Reconexão: recarregar e abrir a raiz mantém a sessão e a dupla.
   await b.reload();
   await b.goto("/");
   await expect(b).toHaveURL(/\/central$/);
-  await expect(b.getByRole("heading", { name: "Unidade Noturna" })).toBeVisible();
+  await expect(b.getByTestId("central-ready")).toHaveText("Unidade Noturna");
 
-  // Sair encerra a sessão.
+  // Quando A sai, B vê o parceiro offline.
+  await a.goto("/perfil");
   await a.getByRole("button", { name: "Sair" }).click();
   await expect(a).toHaveURL(/\/entrar$/);
+  await expect(b.getByTestId("partner-presence")).toHaveAttribute("data-status", "offline", { timeout: 20_000 });
   await a.goto("/central");
   await expect(a).toHaveURL(/\/entrar$/);
 
   await ctxA.close();
   await ctxB.close();
 });
+
